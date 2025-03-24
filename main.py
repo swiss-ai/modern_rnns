@@ -37,133 +37,64 @@ import sys
 import torch
 import torch.multiprocessing as mp
 
-from languini.train_lib import bit_parity_trainer
-from languini.train_lib import lr_schedules
-from languini.common_lib import parallel_utils
-from languini.common_lib import experiment_utils
-from languini.dataset_lib import bit_parity_dataset
-
-from languini.common_lib.parallel_utils import mprint
-from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
-
-import configs
-from model import Model
+import bit_parity_trainer
+import bit_parity_dataset
+from modelgpt import Model
 
 
-def run(config, logger):
-    c = config
-
-    mprint(
-        f"{c.n_workers} workers detected. Using DistributedDataParallel. Local rank: {LOCAL_RANK}. Device: {c.device}"
-    )
-    mprint(f"train batch size per worker/GPU: {c.train_batch_size // WORLD_SIZE}")
-    mprint(f"eval batch size per worker/GPU: {c.eval_batch_size // WORLD_SIZE}")
-    mprint(f"test batch size per worker/GPU: {c.test_batch_size // WORLD_SIZE}")
-    mprint(f"gradient accumulation steps: {c.gradient_accumulation_steps}")
-
-    mprint(f"WORLD_SIZE: {WORLD_SIZE}")  # total number of devices
-    mprint(f"WORLD_RANK: {WORLD_RANK}")  # unique id within all devices
-    mprint(f"LOCAL_RANK: {LOCAL_RANK}")  # unique id within the devices of this node
+def run():
 
     train_ds = bit_parity_dataset.BitParityDatasetIterator(
-        batch_size=c.train_batch_size,
-        sequence_length=c.seq_len,
-        device=c.device,
+        batch_size=8,
+        sequence_length=512,
+        device=torch.device("cpu"),
     )
 
     eval_ds = bit_parity_dataset.BitParityDatasetIterator(
-        batch_size=c.eval_batch_size,
-        sequence_length=c.seq_len,
-        device=c.device,
+        batch_size=8,
+        sequence_length=512,
+        device=torch.device("cpu"),
     )
 
     ## Setup Model
-    mprint("Build model ... ")
-    if WORLD_SIZE > 1:
-        mprint("running on multiple devices ...")
-    torch.manual_seed(c.seed)
-    model = Model(config=c)
-    if c.compile != "None":
-        model = torch.compile(model, mode=c.compile)
-    model = model.to(c.device)
-    device_ids = (
-        [LOCAL_RANK] if c.device.type == "cuda" else None
-    )  # must be None for non-cuda
-    model = torch.nn.parallel.DistributedDataParallel(
-        model, device_ids=device_ids
-    )  # we always use DDP so loading weights is simpler
+    model = Model()
+    device = torch.device("cpu")
+    model = model.to(device)
+
 
     ## Setup Optimiser
     opt = torch.optim.Adam(
-        model.parameters(), lr=c.max_lr, betas=(0.9, 0.95), eps=1e-08
+        model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08
     )
-    scheduler = lr_schedules.CosineLR(
-        opt,
-        warmup_steps=200,
-        max_lr=c.max_lr,
-        min_lr=c.min_lr,
-        max_steps=c.decay_steps,
-        decay_after=False,
-    )
+
 
     trainer = bit_parity_trainer.BitParityTrainer(
         model=model,
         train_loader=train_ds,
         eval_loader=eval_ds,
         optimizer=opt,
-        device=c.device,
-        logger=logger,
+        device=device,
     )
 
-    mprint("Begin training ... ")
+    print("Begin training ... ")
     trainer.train()
-    mprint("Done!")
+    print("Done!")
 
 
 def main():
     """Runs a Languini experiment using a GPT model."""
 
     # initialise distributed processes
-    device = parallel_utils.init_distributed()
+    device = torch.device("cpu")
     mp.set_start_method("spawn")
 
-    mprint("Languini Experiment")
-
-    # parse the config name
-    config_name = experiment_utils.parse_config_name(configs.config_names)
-    mprint(f"Loading config: {config_name}")
+    print("Languini Experiment")
 
     # load the config file
-    config = configs.load_config(name=config_name)
     project_path = os.path.dirname(os.path.abspath(__file__))
-    mprint(f"project path: {project_path}")
+    print(f"project path: {project_path}")
 
-    # create parser and add custom args not extracted from the config
-    parser = experiment_utils.create_parser_based_on_config(config)
-    parser.add_argument(
-        "--compile",
-        default="default",
-        type=str,
-        help=f"Which compile mode to use (None, default, reduce-overhead, max-autotune)",
-    )
-
-    # parse args and make updates to the config
-    args = parser.parse_args(sys.argv[2:])
-    config = experiment_utils.update_config_given_args(config, args)
-    config.project_path = project_path
-    config.device = device
-
-    # Check if the config matches the available hardware
-    config = experiment_utils.check_hardware(config, world_size=WORLD_SIZE)
-
-    # Generate experiment name based on config
-    configs.add_exp_name(config)
-    mprint(f"experiment name: {config.exp_name}")
-
-    # Create the log folder, backup python files, and backup the hyperparameter config to a file
-    logger = experiment_utils.setup_experiment(config)
-
-    run(config, logger)
+    run()
 
 
 if __name__ == "__main__":

@@ -34,6 +34,13 @@ class BitParityTrainer:
             inputs, targets = next(self.train_loader)
 
             logits, state = self.model(inputs, state)
+            logits = logits.squeeze(2)
+            print(inputs.shape)
+            print(logits.shape)
+            print(targets.argmax(dim=-1).shape)
+            #output embeddings
+            # self.output_embedding = torch.nn.Embedding(self.model.c.vocab_size, self.model.c.h_dim)
+            # torch.nn.init.normal_(self.output_embedding.weight, mean=0.0, std=0.02)
             loss = self.criterion(logits, targets.argmax(dim=-1))
 
             self.optimizer.zero_grad()
