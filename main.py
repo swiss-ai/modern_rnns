@@ -31,42 +31,38 @@ CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --
     --gradient_accumulation_steps 2\
 """
 
-
+import argparse
 import os
-import sys
 import torch
-import torch.multiprocessing as mp
 
 import bit_parity_trainer
 import bit_parity_dataset
 from modelgpt import Model
+from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
 
-def run():
+def run(device):
 
     train_ds = bit_parity_dataset.BitParityDatasetIterator(
-        batch_size=8,
-        sequence_length=512,
-        device=torch.device("cpu"),
+        batch_size=64,
+        sequence_length=6,
+        device=device,
     )
 
     eval_ds = bit_parity_dataset.BitParityDatasetIterator(
-        batch_size=8,
-        sequence_length=512,
-        device=torch.device("cpu"),
+        batch_size=64,
+        sequence_length=6,
+        device=device,
     )
 
     ## Setup Model
-    model = Model()
-    device = torch.device("cpu")
+    config = MODEL_DEFAULT_CONFIG
+    config["device"] = device
+    model = Model(config=config)
     model = model.to(device)
 
-
     ## Setup Optimiser
-    opt = torch.optim.Adam(
-        model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08
-    )
-
+    opt = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08)
 
     trainer = bit_parity_trainer.BitParityTrainer(
         model=model,
@@ -84,17 +80,27 @@ def run():
 def main():
     """Runs a Languini experiment using a GPT model."""
 
-    # initialise distributed processes
-    device = torch.device("cpu")
-    mp.set_start_method("spawn")
+    parser = argparse.ArgumentParser(description="Languini Experiment")
+    parser.add_argument(
+        "--device",
+        type=str,
+        choices=["cpu", "gpu"],
+        default="cpu",
+        help="Device to use for training",
+    )
+    args = parser.parse_args()
 
+    if args.device == "gpu" and torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
     print("Languini Experiment")
 
     # load the config file
     project_path = os.path.dirname(os.path.abspath(__file__))
     print(f"project path: {project_path}")
 
-    run()
+    run(device)
 
 
 if __name__ == "__main__":

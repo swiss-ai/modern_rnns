@@ -17,6 +17,7 @@ import torch
 import numpy as np
 
 from torch import nn
+
 # from munch import Munch
 # from languini.train_lib.train_utils import check_config
 # from languini.common_lib.debug_utils import check
@@ -35,20 +36,21 @@ DEFAULT_CONFIG = {
     "head_dim": 16,
     "n_heads": 8,
     "use_flash": False,
-    "seq_len":512
+    "seq_len": 512,
 }
 
-class Config():
+
+class Config:
     def __init__(self, conf: dict):
         for key, val in conf.items():
             setattr(self, key, val)
+
 
 class Model(torch.nn.Module):
     def __init__(self, config=DEFAULT_CONFIG):
         super().__init__()
         # check_config(config, DEFAULT_CONFIG)
-        # self.c = c = config
-        self.c = c = Config(DEFAULT_CONFIG)
+        self.c = c = Config(config)
         self.name = "GPT"
 
         self.input_embedding = nn.Embedding(c.vocab_size, c.h_dim)
@@ -59,18 +61,23 @@ class Model(torch.nn.Module):
 
         self.layers = nn.ModuleList([])
         for i in range(c.n_layers):
-            self.layers.append(Block(h_dim=c.h_dim,
-                                     mlp_dim=c.mlp_dim,
-                                     head_dim=c.head_dim,
-                                     n_heads=c.n_heads,
-                                     n_layers=c.n_layers,
-                                     name=f"{self.name}/Block{i + 1}",
-                                     use_flash=c.use_flash))
+            self.layers.append(
+                Block(
+                    h_dim=c.h_dim,
+                    mlp_dim=c.mlp_dim,
+                    head_dim=c.head_dim,
+                    n_heads=c.n_heads,
+                    n_layers=c.n_layers,
+                    name=f"{self.name}/Block{i + 1}",
+                    use_flash=c.use_flash,
+                )
+            )
 
         self.ln_f = LayerNorm(c.h_dim, name=f"{self.name}/lnf")
 
         self.linear = nn.Linear(c.h_dim, 1, bias=False)
         torch.nn.init.normal_(self.linear.weight, mean=0.0, std=0.02)
+        self.classifier = torch.nn.Linear(c.h_dim, 2)
 
     def get_init_state(self, batch_size, device):
         return None
@@ -85,7 +92,9 @@ class Model(torch.nn.Module):
         # check(x, (bsz, seqlen, c.h_dim))
 
         # add position embedding
-        pos_id = torch.arange(0, seqlen, dtype=torch.int64, device=c.device).unsqueeze(0)
+        pos_id = torch.arange(0, seqlen, dtype=torch.int64, device=c.device).unsqueeze(
+            0
+        )
         # check(pos_id, (1, seqlen))
         pos = self.position_embedding(pos_id)
         # check(pos, (1, seqlen, c.h_dim))
@@ -98,10 +107,13 @@ class Model(torch.nn.Module):
 
         # project to vocab
         x = self.ln_f(x, log=log)
-        x = self.linear(x)
-        # check(x, (bsz, seqlen, c.vocab_size))
+        x = x.mean(
+            dim=1
+        )  # averages over all the embeddings.  Not sure if this is better than x[:, -1, :]
+        logits = self.classifier(x)
+        # check(x, (bsz, c.vocab_size))
 
-        return x, state
+        return logits, state
 
 
 if __name__ == "__main__":
@@ -119,7 +131,7 @@ if __name__ == "__main__":
     c.vocab_size = 1
     c.use_flash = False
     if torch.cuda.is_available():
-        c.device = 'cuda'
+        c.device = "cuda"
         c.n_workers = torch.cuda.device_count()
     else:
         c.device = "cpu"
@@ -128,7 +140,11 @@ if __name__ == "__main__":
 
     model = Model(config=c).to(c.device)
 
-    dummy_x = torch.tensor(np.random.choice(a=range(c.vocab_size), size=(c.batch_size, c.seq_len), replace=True))
+    dummy_x = torch.tensor(
+        np.random.choice(
+            a=range(c.vocab_size), size=(c.batch_size, c.seq_len), replace=True
+        )
+    )
     dummy_x = dummy_x.to(c.device)
     print(f"{dummy_x.shape=}")
 

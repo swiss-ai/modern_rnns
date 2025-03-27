@@ -36,7 +36,7 @@ class BitParityDatasetIterator:
 
 # Example usage
 if __name__ == "__main__":
-    dataset = BitParityDatasetIterator(batch_size=8, sequence_length=512, device="cpu")
+    dataset = BitParityDatasetIterator(batch_size=8, sequence_length=10, device="cpu")
     for _ in range(3):  # Generate 3 batches
         x, y = next(dataset)
         print("Input:", x)
