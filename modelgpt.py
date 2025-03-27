@@ -31,11 +31,11 @@ DEFAULT_CONFIG = {
     "vocab_size": 2,
     "n_layers": 2,
     "h_dim": 16,
-    "mlp_dim": 64,
-    "head_dim": 4,
-    "n_heads": 2,
+    "mlp_dim": 16,
+    "head_dim": 8,
+    "n_heads": 4,
     "use_flash": False,
-    "seq_len": 8,
+    "seq_len": 32,
 }
 
 class Config:

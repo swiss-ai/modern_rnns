@@ -32,12 +32,8 @@ class BitParityTrainer:
 
         while step < self.max_steps:
             inputs, targets = next(self.train_loader)
-            # Inputs is shape [8, 512] and targets is shape [8, 2]
-            # print(inputs, targets)
 
             logits, state = self.model(inputs, state)
-            # output embeddings
-            # print("aa",logits.shape, targets.shape)
 
             loss = self.criterion(logits, targets)
 
