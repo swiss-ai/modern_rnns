@@ -72,10 +72,11 @@ class BitParityTrainer:
                 loss = self.criterion(logits, targets)
                 total_loss += loss.item()
 
-                preds = torch.argmax(logits, dim=1)
-                labels = torch.argmax(targets, dim=1)
+                preds = torch.argmax(logits, dim=2)
+
+                labels = torch.argmax(targets, dim=2)
                 total_correct += (preds == labels).sum().item()
-                total_samples += targets.size(0)
+                total_samples += targets.size(0)*targets.size(1)
 
         avg_loss = total_loss / 10
         accuracy = total_correct / total_samples
