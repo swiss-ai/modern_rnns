@@ -40,7 +40,7 @@ import bit_parity_dataset
 from modelgpt import Model
 from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
-SEQ_LEN = 6
+SEQ_LEN = MODEL_DEFAULT_CONFIG["seq_len"]
 
 
 def run(device):

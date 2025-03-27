@@ -33,12 +33,13 @@ class BitParityTrainer:
         while step < self.max_steps:
             inputs, targets = next(self.train_loader)
             # Inputs is shape [8, 512] and targets is shape [8, 2]
+            # print(inputs, targets)
 
             logits, state = self.model(inputs, state)
             # output embeddings
-            # self.output_embedding = torch.nn.Embedding(self.model.c.vocab_size, self.model.c.h_dim)
-            # torch.nn.init.normal_(self.output_embedding.weight, mean=0.0, std=0.02)
-            loss = self.criterion(logits, targets.argmax(dim=-1))
+            # print("aa",logits.shape, targets.shape)
+
+            loss = self.criterion(logits, targets)
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -68,7 +69,7 @@ class BitParityTrainer:
             for _ in range(10):  # Evaluate on 10 batches
                 inputs, targets = next(self.eval_loader)
                 logits, state = self.model(inputs, state)
-                loss = self.criterion(logits, targets.argmax(dim=-1))
+                loss = self.criterion(logits, targets)
                 total_loss += loss.item()
 
                 preds = torch.argmax(logits, dim=1)

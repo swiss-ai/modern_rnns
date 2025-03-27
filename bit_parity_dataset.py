@@ -26,10 +26,23 @@ class BitParityDatasetIterator:
         )
 
         # Compute parity (sum of 1s mod 2) and convert to one-hot
-        parity_labels = batch_x.sum(dim=1) % 2
-        batch_y = torch.nn.functional.one_hot(parity_labels, num_classes=2).to(
-            dtype=torch.int64
+        # parity_labels = batch_x.sum(dim=1) % 2
+        # batch_y = torch.nn.functional.one_hot(parity_labels, num_classes=2).to(
+        #     dtype=torch.int64
+        # )
+
+        # holds partial sums (1 if partial sum is even, else 0)
+        # parity_labels = [batch_x[:, :i + 1].sum(dim=1) % 2 == 0 for i in range(self.sequence_length)]
+        # batch_y = torch.stack(parity_labels, dim=1).int()
+
+        # Compute parity labels without using cumsum
+        parity_labels = [batch_x[:, :i + 1].sum(dim=1) % 2 == 0 for i in range(self.sequence_length)]
+        batch_y = torch.stack(parity_labels, dim=1).to(
+            dtype=torch.float
         )
+        batch_y = torch.stack([1 - batch_y, batch_y], dim=2)
+
+
 
         return batch_x.to(self.device), batch_y.to(self.device)
 

@@ -17,7 +17,6 @@ import torch
 import numpy as np
 
 from torch import nn
-
 # from munch import Munch
 # from languini.train_lib.train_utils import check_config
 # from languini.common_lib.debug_utils import check
@@ -29,22 +28,20 @@ from lib import Block
 
 DEFAULT_CONFIG = {
     "device": "cpu",
-    "vocab_size": 666,
+    "vocab_size": 2,
     "n_layers": 2,
-    "h_dim": 128,
-    "mlp_dim": 256,
-    "head_dim": 16,
-    "n_heads": 8,
+    "h_dim": 16,
+    "mlp_dim": 64,
+    "head_dim": 4,
+    "n_heads": 2,
     "use_flash": False,
-    "seq_len": 512,
+    "seq_len": 8,
 }
-
 
 class Config:
     def __init__(self, conf: dict):
         for key, val in conf.items():
             setattr(self, key, val)
-
 
 class Model(torch.nn.Module):
     def __init__(self, config=DEFAULT_CONFIG):
@@ -85,9 +82,12 @@ class Model(torch.nn.Module):
         # x: [batch_size, seq_length]
         bsz, seqlen = x.shape
         c = self.c
+        # print("input",x.shape)
 
         # embedd input tokens
         x = self.input_embedding(x) * math.sqrt(c.h_dim)
+        # print("embeddings",x.shape)
+
         # check(x, (bsz, seqlen, c.h_dim))
 
         # add position embedding
@@ -104,13 +104,16 @@ class Model(torch.nn.Module):
             x = layer(x, log=log)
             # check(x, (bsz, seqlen, c.h_dim))
 
+        # print("after layers", x.shape)
+
         # project to vocab
         x = self.ln_f(x, log=log)
-        x = x.mean(
-            dim=1
-        )  # averages over all the embeddings.  Not sure if this is better than x[:, -1, :]
+        # print("before mean x", x.shape)
+
         logits = self.linear(x)
+        # print("logits", x.shape)
         # check(x, (bsz, c.vocab_size))
+
 
         return logits, state
 
