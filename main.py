@@ -40,24 +40,28 @@ import bit_parity_dataset
 from modelgpt import Model
 from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
+SEQ_LEN = 6
+
 
 def run(device):
 
     train_ds = bit_parity_dataset.BitParityDatasetIterator(
         batch_size=64,
-        sequence_length=6,
+        sequence_length=SEQ_LEN,
         device=device,
     )
 
     eval_ds = bit_parity_dataset.BitParityDatasetIterator(
         batch_size=64,
-        sequence_length=6,
+        sequence_length=SEQ_LEN,
         device=device,
     )
 
     ## Setup Model
     config = MODEL_DEFAULT_CONFIG
     config["device"] = device
+    config["seq_len"] = SEQ_LEN
+    config["vocab_size"] = 2  # number of output classes for the task
     model = Model(config=config)
     model = model.to(device)
 

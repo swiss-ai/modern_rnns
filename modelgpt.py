@@ -75,9 +75,8 @@ class Model(torch.nn.Module):
 
         self.ln_f = LayerNorm(c.h_dim, name=f"{self.name}/lnf")
 
-        self.linear = nn.Linear(c.h_dim, 1, bias=False)
+        self.linear = nn.Linear(c.h_dim, c.vocab_size, bias=False)
         torch.nn.init.normal_(self.linear.weight, mean=0.0, std=0.02)
-        self.classifier = torch.nn.Linear(c.h_dim, 2)
 
     def get_init_state(self, batch_size, device):
         return None
@@ -110,7 +109,7 @@ class Model(torch.nn.Module):
         x = x.mean(
             dim=1
         )  # averages over all the embeddings.  Not sure if this is better than x[:, -1, :]
-        logits = self.classifier(x)
+        logits = self.linear(x)
         # check(x, (bsz, c.vocab_size))
 
         return logits, state

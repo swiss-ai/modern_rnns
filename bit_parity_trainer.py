@@ -11,7 +11,7 @@ class BitParityTrainer:
         optimizer,
         device,
         max_steps=50000,
-        eval_every=100,
+        eval_every=1000,
         logger=None,
     ):
         self.model = model
@@ -47,7 +47,7 @@ class BitParityTrainer:
             # Detach state so it doesn’t backpropagate through the whole history
             state = self._detach_state(state)
 
-            if step % 10 == 0:
+            if step % 100 == 0:
                 print(f"[Step {step}] Train loss: {loss.item():.4f}")
                 if self.logger:
                     self.logger.log({"train/loss": loss.item()}, step)
