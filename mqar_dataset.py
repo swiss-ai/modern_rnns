@@ -81,7 +81,7 @@ class MQARDatasetIterator:
             num_classes=self.n_values
         ).float()
 
-        return (keys_tensor, values_onehot)
+        return (keys_tensor.to(self.device), values_onehot.to(self.device))
 
     def __generate_sample(self):
         kv_pairs = self.__generate_sequence()

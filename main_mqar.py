@@ -68,7 +68,7 @@ def main():
     parser.add_argument(
         "--device",
         type=str,
-        choices=["cpu", "gpu"],
+        choices=["cpu", "gpu", "mps"],
         default="cpu",
         help="Device to use for training",
     )
@@ -76,6 +76,8 @@ def main():
 
     if args.device == "gpu" and torch.cuda.is_available():
         device = torch.device("cuda")
+    elif args.device == "mps" and torch.mps.is_available():
+        device = torch.device("mps")
     else:
         device = torch.device("cpu")
     print("Languini Experiment")
