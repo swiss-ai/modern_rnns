@@ -30,7 +30,7 @@ class MQARTrainer:
         state = self._init_state()
 
         while step < self.max_steps:
-            for inputs, targets in self.train_loader:
+                inputs, targets = next(self.train_loader)
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
 
                 self.optimizer.zero_grad()
