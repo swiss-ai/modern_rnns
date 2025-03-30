@@ -2,10 +2,10 @@ import argparse
 import os
 import torch
 
-from mqar_dataset import MQARDatasetIterator
-from mqar_trainer import MQARTrainer
-from mqar_modelgpt import Model
-from mqar_modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
+from mqar.mqar_seq_dataset import MQARDatasetIterator
+from mqar.mqar_seq_trainer import MQARTrainer
+from modelgpt import Model
+from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
 SEQ_LEN = MODEL_DEFAULT_CONFIG["seq_len"]
 
@@ -38,8 +38,9 @@ def run(device):
     config = MODEL_DEFAULT_CONFIG
     config["device"] = device
     config["seq_len"] = config["seq_len"]
-    config["vocab_size"] = config["value_size"] = n_values  
+    config["value_size"] = n_values  
     config["key_size"] = n_keys 
+    config["vocab_size"] = n_values + n_keys
 
     model = Model(config=config).to(device)
 
