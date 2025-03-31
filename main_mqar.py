@@ -2,12 +2,12 @@ import argparse
 import os
 import torch
 
-from mqar.mqar_seq_dataset import MQARDatasetIterator
-from mqar.mqar_seq_trainer import MQARTrainer
-from modelgpt import Model
-from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
+from mqar.mqar_dataset import MQARDatasetIterator
+from mqar.mqar_trainer import MQARTrainer
+from mqar.mqar_modelgpt import Model
+from mqar.mqar_modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
-SEQ_LEN = MODEL_DEFAULT_CONFIG["seq_len"]
+SEQ_LEN = 4 #MODEL_DEFAULT_CONFIG["seq_len"]
 
 def run(device):
     ## Setup Dataset
@@ -15,7 +15,7 @@ def run(device):
     n_keys = 10
     train_ds = MQARDatasetIterator(
         batch_size=32,
-        num_pairs=5,
+        num_pairs=SEQ_LEN // 2,
         n_keys=n_keys,
         n_values=n_values,
         unique_keys=True,
@@ -25,7 +25,7 @@ def run(device):
 
     eval_ds = MQARDatasetIterator(
         batch_size=32,
-        num_pairs=5,
+        num_pairs=SEQ_LEN // 2,
         n_keys=n_keys,
         n_values=n_values,
         unique_keys=True,
@@ -37,7 +37,7 @@ def run(device):
     ## Setup Model
     config = MODEL_DEFAULT_CONFIG
     config["device"] = device
-    config["seq_len"] = config["seq_len"]
+    config["seq_len"] = SEQ_LEN + 1 #config["seq_len"]
     config["value_size"] = n_values  
     config["key_size"] = n_keys 
     config["vocab_size"] = n_values + n_keys
@@ -54,7 +54,7 @@ def run(device):
         eval_loader=eval_ds,
         optimizer=optimizer,
         device=device,
-        max_steps=10000,
+        max_steps=50000,
         eval_every=500,
     )
 

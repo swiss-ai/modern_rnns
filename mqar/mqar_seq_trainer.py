@@ -22,7 +22,7 @@ class MQARTrainer:
         self.eval_every = eval_every
         self.logger = logger
 
-        self.criterion = torch.nn.CrossEntropyLoss()
+        self.criterion = torch.nn.MSELoss()
 
     def train(self):
         self.model.train()
@@ -42,12 +42,17 @@ class MQARTrainer:
                 loss.backward()
                 self.optimizer.step()
 
+                _, predicted = torch.max(logits[:, -1], dim=1)
+                _, true_values = torch.max(targets, dim=1)
+                correct = (predicted == true_values).sum().item()
+
                 state = self._detach_state(state)
 
                 if step % 100 == 0:
-                    print(f"[Step {step}] Train loss: {loss.item():.4f}")
+                    accuracy = correct / targets.size(0)
+                    print(f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}")
                     if self.logger:
-                        self.logger.log({"train/loss": loss.item()}, step)
+                        self.logger.log({"train/loss": loss.item(), "train/accuracy": accuracy}, step)
 
                 if step % self.eval_every == 0 and step > 0:
                     self.evaluate(step)
@@ -73,11 +78,18 @@ class MQARTrainer:
                 loss = self.criterion(logits[:, -1], targets)
                 total_loss += loss.item()
 
+                _, predicted = torch.max(logits[:, -1], dim=1)
+                _, true_values = torch.max(targets, dim=1)
+
+                total_correct += (predicted == true_values).sum().item()
+                total_samples += inputs.size(0)
+
         avg_loss = total_loss / 10 
-        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f}")
+        accuracy = total_correct / total_samples
+        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f} , Accuracy: {accuracy:.4f}")
 
         if self.logger:
-            self.logger.log({"eval/loss": avg_loss}, step)
+            self.logger.log({"eval/loss": avg_loss, "eval/accuracy": accuracy}, step)
 
         self.model.train()
 
