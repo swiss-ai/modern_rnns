@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Script to train models on the languini books dataset.
+"""Script to train models on the a diverse range of datasets.
 
 # Example calls:
 
@@ -35,8 +35,8 @@ import argparse
 import os
 import torch
 
-import bit_parity_trainer
-import bit_parity_dataset
+from trainers import bit_parity_trainer
+from datasets import bit_parity_dataset
 from modelgpt import Model
 from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 

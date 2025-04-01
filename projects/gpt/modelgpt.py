@@ -35,7 +35,7 @@ DEFAULT_CONFIG = {
     "head_dim": 8,
     "n_heads": 4,
     "use_flash": False,
-    "seq_len": 32,
+    "seq_len": 8,
 }
 
 class Config:
