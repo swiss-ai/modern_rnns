@@ -17,11 +17,11 @@
 # Example calls:
 
 ## Single GPU:
-CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/gpt/main.py tiny --train_batch_size 16 --debug
+CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/gpt/maingpt.py tiny --train_batch_size 16 --debug
 
 ## Multi GPU:
 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --master_addr=server.example.com --master_port=12300 \
-    languini/projects/gpt/main.py tiny \
+    languini/projects/gpt/maingpt.py tiny \
     --train_batch_size 16 \
     --eval_every 1000 \
     --log_grads_every 1000 \
