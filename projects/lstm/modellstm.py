@@ -22,16 +22,27 @@ from torch.nn import LayerNorm
 from projects.lstm.lib import LayerNorm
 from projects.lstm.lib import Block
 
+# c.h_dim = 128
+#     c.mlp_dim = 256
+#     c.head_dim = 16
+#     c.n_heads = 8
+#     c.n_layers = 2
+#
+#     c.batch_size = 8
+#     c.block_length = 32
+#     c.seq_len = 512
+#     c.vocab_size = 666
+
 DEFAULT_CONFIG = {
     "device": None,
-    "vocab_size": 16,
+    "vocab_size": 2,#
     "n_layers": 1,
-    "h_dim": 2,
-    "mlp_dim": 2,
-    "head_dim": 2,
-    "n_heads": 2,
+    "h_dim": 16,
+    "mlp_dim": 8,
+    "head_dim": 8, #change for q lstm
+    "n_heads": 8, #change for q lstm
     "non_quasi": False,
-    "block_length": 4,
+    "block_length": 8,
     "seq_len": 8
 }
 
@@ -44,7 +55,6 @@ class Model(torch.nn.Module):
         super().__init__()
         self.c = c = Config(config)
         self.name = "LSTM"
-        print(c.vocab_size)
 
         self.input_embedding = nn.Embedding(c.vocab_size, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
@@ -95,8 +105,8 @@ class Model(torch.nn.Module):
 
         # project to vocab
         x = self.ln_f(x, log=log)
-        x = self.linear(x)
+        logits = self.linear(x)
 
-        return x, new_states
+        return logits, new_states
 
 

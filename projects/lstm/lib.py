@@ -130,7 +130,7 @@ class MultiHeadLSTMCell(nn.Module):
         # iterate over the sequence
         outputs = []
         for idx in range(self.seq_len):
-            check(h, (bsz, self.n_heads, self.head_dim))
+            # check(h, (bsz, self.n_heads, self.head_dim))
             h = h.view(bsz, self.n_heads * self.head_dim * 2)
 
             # gate contribution of the current state

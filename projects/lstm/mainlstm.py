@@ -124,7 +124,7 @@ def main():
     parser.add_argument("--dataset", type=str, choices=["bit_parity", "MQAR"], default="bit_parity",
                         help="Choose dataset: 'bit_parity' (default), 'MQAR'.")
     args = parser.parse_args()
-    print(args)
+
     if args.device == "gpu" and torch.cuda.is_available():
         device = torch.device("cuda")
     else:
