@@ -35,24 +35,36 @@ import argparse
 import os
 import torch
 
-from trainers import bit_parity_trainer
-from datasets import bit_parity_dataset
+from trainers.bit_parity_trainer import BitParityTrainer
+from datasets.bit_parity_dataset import BitParityDatasetIterator
 from modelgpt import Model
-from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
+from modelgpt import DEFAULT_CONFIG as GPT_MODEL_DEFAULT_CONFIG
 
-SEQ_LEN = MODEL_DEFAULT_CONFIG["seq_len"]
+SEQ_LEN = None
+BATCH_SIZE = 64
+VOCAB_SIZE = None
 
+def run(device, dataset):
 
-def run(device):
+    if(dataset == "bit_parity"):
+        datasetIterator = BitParityDatasetIterator
+        trainerClass = BitParityTrainer
+        MODEL_DEFAULT_CONFIG = GPT_MODEL_DEFAULT_CONFIG
+        VOCAB_SIZE = 2
+    else:
+        # add the configuration for each new dataset here
+        pass
 
-    train_ds = bit_parity_dataset.BitParityDatasetIterator(
-        batch_size=64,
+    SEQ_LEN = MODEL_DEFAULT_CONFIG["seq_len"]
+
+    train_ds = datasetIterator(
+        batch_size=BATCH_SIZE,
         sequence_length=SEQ_LEN,
         device=device,
     )
 
-    eval_ds = bit_parity_dataset.BitParityDatasetIterator(
-        batch_size=64,
+    eval_ds = datasetIterator(
+        batch_size=BATCH_SIZE,
         sequence_length=SEQ_LEN,
         device=device,
     )
@@ -61,14 +73,14 @@ def run(device):
     config = MODEL_DEFAULT_CONFIG
     config["device"] = device
     config["seq_len"] = SEQ_LEN
-    config["vocab_size"] = 2  # number of output classes for the task
+    config["vocab_size"] = VOCAB_SIZE  # number of output classes for the task
     model = Model(config=config)
     model = model.to(device)
 
     ## Setup Optimiser
     opt = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08)
 
-    trainer = bit_parity_trainer.BitParityTrainer(
+    trainer = trainerClass(
         model=model,
         train_loader=train_ds,
         eval_loader=eval_ds,
@@ -82,9 +94,9 @@ def run(device):
 
 
 def main():
-    """Runs a Languini experiment using a GPT model."""
+    """Runs an experiment using a GPT model."""
 
-    parser = argparse.ArgumentParser(description="Languini Experiment")
+    parser = argparse.ArgumentParser(description="GPT Experiment")
     parser.add_argument(
         "--device",
         type=str,
@@ -92,19 +104,21 @@ def main():
         default="cpu",
         help="Device to use for training",
     )
+    parser.add_argument("--dataset", type=str, choices=["bit_parity", "MQAR"], default="bit_parity",
+                        help="Choose dataset: 'bit_parity' (default), 'MQAR'.")
     args = parser.parse_args()
-
+    print(args)
     if args.device == "gpu" and torch.cuda.is_available():
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
-    print("Languini Experiment")
+    print("GPT Experiment")
 
     # load the config file
     project_path = os.path.dirname(os.path.abspath(__file__))
     print(f"project path: {project_path}")
 
-    run(device)
+    run(device, args.dataset)
 
 
 if __name__ == "__main__":
