@@ -16,11 +16,11 @@ import math
 import torch
 # import numpy as np
 
-from torch import nn, Tensor
+from torch import nn
 from torch.nn import LayerNorm
 
-from lib import LayerNorm
-from lib import Block
+from projects.lstm.lib import LayerNorm
+from projects.lstm.lib import Block
 
 DEFAULT_CONFIG = {
     "device": None,
@@ -30,7 +30,7 @@ DEFAULT_CONFIG = {
     "mlp_dim": 2,
     "head_dim": 2,
     "n_heads": 2,
-    "non_quasi": 4,
+    "non_quasi": False,
     "block_length": 4,
     "seq_len": 8
 }
@@ -40,9 +40,9 @@ class Config():
         for key, val in conf.items():
             setattr(self, key, val)
 class Model(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, config=DEFAULT_CONFIG):
         super().__init__()
-        self.c = c = Config(DEFAULT_CONFIG)
+        self.c = c = Config(config)
         self.name = "LSTM"
         print(c.vocab_size)
 

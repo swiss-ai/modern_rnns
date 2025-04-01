@@ -99,5 +99,7 @@ class BitParityTrainer:
         return (
             {k: v.detach() if v is not None else None for k, v in state.items()}
             if isinstance(state, dict)
+            else [(s[0].detach(), s[1].detach()) for s in state]
+            if isinstance(state, list)
             else state.detach()
         )

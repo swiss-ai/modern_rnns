@@ -22,8 +22,8 @@ from torch import nn
 # from languini.common_lib.debug_utils import check
 # from languini.common_lib.debug_utils import log_stats_and_dist
 
-from lib import LayerNorm
-from lib import Block
+from projects.gpt.lib import LayerNorm
+from projects.gpt.lib import Block
 
 
 DEFAULT_CONFIG = {
