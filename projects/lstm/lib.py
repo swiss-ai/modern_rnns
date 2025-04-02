@@ -17,7 +17,7 @@ import torch
 import torch.nn.functional as F
 
 from torch import nn
-# from languini.common_lib.debug_utils import check
+from common_lib.debug_utils import check
 # from languini.common_lib.debug_utils import log_stats_and_dist
 
 
@@ -101,13 +101,13 @@ class MultiHeadLSTMCell(nn.Module):
     def forward(self, f_in, i_in, z_in, o_in, state, log=None):
         bsz, _, _ = f_in.shape
         c, h = state
-        # check(c, (bsz, self.n_heads, self.head_dim))
-        # check(h, (bsz, self.n_heads, self.head_dim))
-        #
-        # check(f_in, (bsz, self.seq_len, self.h_dim))
-        # check(i_in, (bsz, self.seq_len, self.h_dim))
-        # check(z_in, (bsz, self.seq_len, self.h_dim))
-        # check(o_in, (bsz, self.seq_len, self.h_dim))
+        check(c, (bsz, self.n_heads, self.head_dim))
+        check(h, (bsz, self.n_heads, self.head_dim))
+
+        check(f_in, (bsz, self.seq_len, self.h_dim))
+        check(i_in, (bsz, self.seq_len, self.h_dim))
+        check(z_in, (bsz, self.seq_len, self.h_dim))
+        check(o_in, (bsz, self.seq_len, self.h_dim))
 
         # compute the gates given x in parallel
         fx = self.linear_Fx(f_in)  # forget gate
@@ -125,13 +125,13 @@ class MultiHeadLSTMCell(nn.Module):
         ix = ix.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
         zx = zx.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
         ox = ox.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
-        # check(fx, (bsz, self.n_heads, self.seq_len, self.head_dim))
+        check(fx, (bsz, self.n_heads, self.seq_len, self.head_dim))
 
         # iterate over the sequence
         outputs = []
         for idx in range(self.seq_len):
-            # check(h, (bsz, self.n_heads, self.head_dim))
-            h = h.view(bsz, self.n_heads * self.head_dim * 2)
+            check(h, (bsz, self.n_heads, self.head_dim))
+            h = h.view(bsz, self.n_heads * self.head_dim )
 
             # gate contribution of the current state
             fh = self.linear_Fh(h)  # forget gate
@@ -220,13 +220,13 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         bsz, _, _ = f_in.shape
 
         c, h = state
-        # check(c, (bsz, self.n_heads, self.head_dim))
-        # check(h, (bsz, self.n_heads, self.head_dim))
-        #
-        # check(f_in, (bsz, self.seq_len, self.h_dim))
-        # check(i_in, (bsz, self.seq_len, self.h_dim))
-        # check(z_in, (bsz, self.seq_len, self.h_dim))
-        # check(o_in, (bsz, self.seq_len, self.h_dim))
+        check(c, (bsz, self.n_heads, self.head_dim))
+        check(h, (bsz, self.n_heads, self.head_dim))
+
+        check(f_in, (bsz, self.seq_len, self.h_dim))
+        check(i_in, (bsz, self.seq_len, self.h_dim))
+        check(z_in, (bsz, self.seq_len, self.h_dim))
+        check(o_in, (bsz, self.seq_len, self.h_dim))
 
         # compute the gates given x in parallel
         fx = self.linear_Fx(f_in)  # forget gate
@@ -248,14 +248,14 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         ix = ix.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
         zx = zx.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
         ox = ox.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        # check(fx, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
+        check(fx, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
 
         f = torch.sigmoid(fx + 1.0)
         o = torch.sigmoid(ox)
-        # check(f, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
+        check(f, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
 
         update = (torch.sigmoid(ix) * torch.tanh(zx))
-        # check(update, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
+        check(update, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
 
         # below is the slow implementation
         """

@@ -34,13 +34,13 @@ from projects.lstm.lib import Block
 #     c.vocab_size = 666
 
 DEFAULT_CONFIG = {
-    "device": None,
-    "vocab_size": 2,#
-    "n_layers": 1,
-    "h_dim": 16,
+    "device": 'cpu',
+    "vocab_size": 2,
+    "n_layers": 2,
+    "h_dim": 8,
     "mlp_dim": 8,
-    "head_dim": 8, #change for q lstm
-    "n_heads": 8, #change for q lstm
+    "head_dim": 4, #change for q lstm
+    "n_heads": 2, #change for q lstm
     "non_quasi": False,
     "block_length": 8,
     "seq_len": 8
@@ -59,8 +59,8 @@ class Model(torch.nn.Module):
         self.input_embedding = nn.Embedding(c.vocab_size, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
-        # self.position_embedding = nn.Embedding(c.seq_len, c.h_dim)
-        # torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
+        self.position_embedding = nn.Embedding(c.seq_len, c.h_dim)
+        torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
 
         self.layers = nn.ModuleList([])
         for i in range(c.n_layers):

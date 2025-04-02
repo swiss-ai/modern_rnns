@@ -114,10 +114,6 @@ def main():
         device = torch.device("cpu")
     print("GPT Experiment")
 
-    # load the config file
-    project_path = os.path.dirname(os.path.abspath(__file__))
-    print(f"project path: {project_path}")
-
     run(device, args.dataset)
 
 
