@@ -39,8 +39,8 @@ class MQARDatasetIterator:
                 "sequence"
             )
         
-        self.key_indexes = list(range(self.n_keys))
-        self.value_indexes = list(range(self.n_keys, self.n_keys + self.n_values))
+        self.key_indexes = list(range(1, self.n_keys + 1))
+        self.value_indexes = list(range(self.n_keys, self.n_keys + self.n_values + 1))
 
     def __iter__(self):
         return self
@@ -76,12 +76,7 @@ class MQARDatasetIterator:
         keys_tensor = torch.tensor(keys).long()
         values_tensor = torch.tensor(values).long()
 
-        values_onehot = torch.nn.functional.one_hot(
-            values_tensor - self.n_keys,
-            num_classes=self.n_values
-        ).float()
-
-        return (keys_tensor.to(self.device), values_onehot.to(self.device))
+        return (keys_tensor.to(self.device), values_tensor.to(self.device))
 
     def __generate_sample(self):
         kv_pairs = self.__generate_sequence()
@@ -104,15 +99,16 @@ class MQARDatasetIterator:
             query_key = keys[query_index].unsqueeze(0)
             true_value = ground_truth[query_key.item()].to(self.device)
 
-            query_value = torch.zeros((1, self.n_values), device = self.device)
-
             keys_with_query = torch.cat([keys, query_key], dim = 0).to(self.device)
-            values_with_query = torch.cat([values, query_value], dim = 0).to(self.device)
+            values_with_query = torch.cat([values, torch.tensor([0], device = self.device)], dim = 0).to(self.device)
 
-            batch_kv.append((keys_with_query, values_with_query))
-            batch_targets.append(true_value)
+            target_one_hot = torch.zeros(self.n_keys + self.n_values + 1, device=self.device)
+            target_one_hot[true_value] = 1
+
+            batch_kv.append(torch.stack([keys_with_query, values_with_query], dim = 0))
+            batch_targets.append(target_one_hot)
         
-        return batch_kv, batch_targets
+        return torch.stack(batch_kv), torch.stack(batch_targets)
     
     def __generate_all_queries(self):
         """
@@ -127,15 +123,17 @@ class MQARDatasetIterator:
         batch_targets = []
 
         for query_key in ground_truth.keys():
-            query_value = torch.zeros((1, self.n_values), device = self.device)
-
+            true_value = ground_truth[query_key.item()].to(self.device)
             keys_with_query = torch.cat([keys, torch.tensor([query_key])], dim = 0).to(self.device)
-            values_with_query = torch.cat([values, query_value], dim = 0).to(self.device)
+            values_with_query = torch.cat([values, torch.tensor([0], device = self.device)], dim = 0).to(self.device)
 
-            batch_kv.append((keys_with_query, values_with_query))
-            batch_targets.append(ground_truth[query_key].to(self.device))
+            target_one_hot = torch.zeros(self.n_keys + self.n_values + 1, device=self.device)
+            target_one_hot[true_value] = 1
+
+            batch_kv.append(torch.stack([keys_with_query, values_with_query], dim = 0))
+            batch_targets.append(target_one_hot)
         
-        return batch_kv, batch_targets
+        return torch.stack(batch_kv), torch.stack(batch_targets)
     
     def __next__(self) -> Tuple[torch.Tensor, Dict[int, int]]:
         if self.all_queries_for_input:

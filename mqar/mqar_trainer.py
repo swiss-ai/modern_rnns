@@ -22,42 +22,39 @@ class MQARTrainer:
         self.eval_every = eval_every
         self.logger = logger
 
-        self.criterion = torch.nn.MSELoss()
+        self.criterion = torch.nn.CrossEntropyLoss()
 
     def train(self):
         self.model.train()
         step = 0
         state = self._init_state()
 
-        while step < self.max_steps:
-            batch, targets = next(self.train_loader)
-            total_loss = 0.0
+        for step in range(self.max_steps):
+            inputs, targets = next(self.train_loader)
+            inputs, targets = inputs.to(self.device), targets.to(self.device)
 
             self.optimizer.zero_grad()
 
-            for (keys, values), target in zip(batch, targets):
-                x = [keys.to(self.device), values.to(self.device)]
-                target = target.to(self.device)
-                preds, state = self.model(x, state)
-                pred_query = preds[0, -1]  # [value_size]
+            logits, state = self.model(inputs, state)
 
-                loss = 0.5 * ((pred_query - target) ** 2).sum()
-                loss.backward()
-                total_loss += loss.item()
-
-            self.optimizer.step()
+            loss = self.criterion(logits[:, -1], targets)
+            
+            loss.backward()
+            self.optimizer.step()            
+            
+            _, predicted = torch.max(logits[:, -1], dim=1)
+            _, true_values = torch.max(targets, dim=1)
+            correct = (predicted == true_values).sum().item()
             state = self._detach_state(state)
 
             if step % 100 == 0:
-                avg_loss = total_loss / len(batch)
-                print(f"[Step {step}] Train loss: {avg_loss:.4f}")
+                accuracy = correct / targets.size(0)
+                print(f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}")
                 if self.logger:
-                    self.logger.log({"train/loss": avg_loss}, step)
+                    self.logger.log({"train/loss": loss.item(), "train/accuracy": accuracy}, step)
 
             if step % self.eval_every == 0 and step > 0:
                 self.evaluate(step)
-
-            step += 1
 
     def evaluate(self, step):
         self.model.eval()
@@ -68,25 +65,23 @@ class MQARTrainer:
 
         with torch.no_grad():
             for _ in range(10):
-                batch, targets = next(self.eval_loader)
+                inputs, targets = next(self.eval_loader)
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
 
-                for (keys, values), target in zip(batch, targets):
-                    x = [keys.to(self.device), values.to(self.device)]
-                    target = target.to(self.device)
-                    preds, state = self.model(x, state)
-                    pred_query = preds[0, -1]  # [value_size]
+                logits, state = self.model(inputs, state)
+                
+                loss = self.criterion(logits[:, -1], targets)
+                total_loss += loss.item()
 
-                    loss = 0.5 * self.criterion(pred_query, target) 
-                    total_loss += loss.item()
+                _, predicted = torch.max(logits[:, -1], dim=1)
+                _, true_values = torch.max(targets, dim=1)
 
-                    pred_index = pred_query.argmax()
-                    true_index = target.argmax()
-                    total_correct += (pred_index == true_index).item()
-                    total_samples += 1
+                total_correct += (predicted == true_values).sum().item()
+                total_samples += inputs.size(0)
 
-        avg_loss = total_loss / 10
+        avg_loss = total_loss / 10 
         accuracy = total_correct / total_samples
-        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f} , Accuracy: {accuracy:.4f}")
 
         if self.logger:
             self.logger.log({"eval/loss": avg_loss, "eval/accuracy": accuracy}, step)

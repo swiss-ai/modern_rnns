@@ -7,18 +7,18 @@ from mqar.mqar_trainer import MQARTrainer
 from mqar.mqar_modelgpt import Model
 from mqar.mqar_modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
-SEQ_LEN = 4 #MODEL_DEFAULT_CONFIG["seq_len"]
+SEQ_LEN = 10 #MODEL_DEFAULT_CONFIG["seq_len"]
 
 def run(device):
     ## Setup Dataset
     n_values = 20
-    n_keys = 10
+    n_keys = 3 
     train_ds = MQARDatasetIterator(
         batch_size=32,
         num_pairs=SEQ_LEN // 2,
         n_keys=n_keys,
         n_values=n_values,
-        unique_keys=True,
+        unique_keys=False,
         all_queries_for_input=False,
         device=device,
     )
@@ -28,7 +28,7 @@ def run(device):
         num_pairs=SEQ_LEN // 2,
         n_keys=n_keys,
         n_values=n_values,
-        unique_keys=True,
+        unique_keys=False,
         all_queries_for_input=False,
         device=device,
     )
@@ -40,7 +40,7 @@ def run(device):
     config["seq_len"] = SEQ_LEN + 1 #config["seq_len"]
     config["value_size"] = n_values  
     config["key_size"] = n_keys 
-    config["vocab_size"] = n_values + n_keys
+    config["vocab_size"] = n_values + n_keys + 1
 
     model = Model(config=config).to(device)
 

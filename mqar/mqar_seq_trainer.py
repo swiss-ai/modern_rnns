@@ -30,36 +30,36 @@ class MQARTrainer:
         state = self._init_state()
 
         while step < self.max_steps:
-                inputs, targets = next(self.train_loader)
-                inputs, targets = inputs.to(self.device), targets.to(self.device)
+            inputs, targets = next(self.train_loader)
+            inputs, targets = inputs.to(self.device), targets.to(self.device)
 
-                self.optimizer.zero_grad()
-                
-                logits, state = self.model(inputs, state)
-                
-                loss = self.criterion(logits[:, -1], targets)  
+            self.optimizer.zero_grad()
+            
+            logits, state = self.model(inputs, state)
+            
+            loss = self.criterion(logits[:, -1], targets)  
 
-                loss.backward()
-                self.optimizer.step()
+            loss.backward()
+            self.optimizer.step()
 
-                _, predicted = torch.max(logits[:, -1], dim=1)
-                _, true_values = torch.max(targets, dim=1)
-                correct = (predicted == true_values).sum().item()
+            _, predicted = torch.max(logits[:, -1], dim=1)
+            _, true_values = torch.max(targets, dim=1)
+            correct = (predicted == true_values).sum().item()
 
-                state = self._detach_state(state)
+            state = self._detach_state(state)
 
-                if step % 100 == 0:
-                    accuracy = correct / targets.size(0)
-                    print(f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}")
-                    if self.logger:
-                        self.logger.log({"train/loss": loss.item(), "train/accuracy": accuracy}, step)
+            if step % 100 == 0:
+                accuracy = correct / targets.size(0)
+                print(f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}")
+                if self.logger:
+                    self.logger.log({"train/loss": loss.item(), "train/accuracy": accuracy}, step)
 
-                if step % self.eval_every == 0 and step > 0:
-                    self.evaluate(step)
+            if step % self.eval_every == 0 and step > 0:
+                self.evaluate(step)
 
-                step += 1
-                if step >= self.max_steps:
-                    break
+            step += 1
+            if step >= self.max_steps:
+                break
 
     def evaluate(self, step):
         self.model.eval()

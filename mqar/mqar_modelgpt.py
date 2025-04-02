@@ -30,9 +30,9 @@ DEFAULT_CONFIG = {
     "n_heads": 4,
     "use_flash": False,
     "seq_len": 32,
-    "emb_dim": 32,         # NEW: embedding size for keys
-    "value_size": 8,         # NEW: one-hot value vector size
-    "key_size": 8,         # NEW: one-hot value vector size
+    "emb_dim": 32,         
+    "value_size": 8,         
+    "key_size": 8,         
 }
 
 class Config:
@@ -46,10 +46,11 @@ class Model(torch.nn.Module):
         self.c = c = Config(config)
         self.name = "MQARModel"
 
-        self.key_embedding = nn.Embedding(c.key_size, c.emb_dim)
+        self.key_embedding = nn.Embedding(c.key_size + 1, c.emb_dim)
+        self.value_embedding = nn.Embedding(c.value_size + c.key_size + 1, c.emb_dim)
         torch.nn.init.normal_(self.key_embedding.weight, mean=0.0, std=0.02)
 
-        self.key_value_proj = nn.Linear(c.emb_dim + c.value_size, c.h_dim)
+        self.key_value_proj = nn.Linear(2 * c.emb_dim, c.h_dim)
 
         self.position_embedding = nn.Embedding(c.seq_len, c.h_dim)
         torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
@@ -68,7 +69,7 @@ class Model(torch.nn.Module):
 
         self.ln_f = LayerNorm(c.h_dim, name=f"{self.name}/lnf")
 
-        self.linear = nn.Linear(c.h_dim, c.value_size, bias=False)
+        self.linear = nn.Linear(c.h_dim, c.vocab_size, bias=False)
         torch.nn.init.normal_(self.linear.weight, mean=0.0, std=0.02)
 
     def get_init_state(self, batch_size, device):
@@ -79,12 +80,13 @@ class Model(torch.nn.Module):
         #   x[1]: one-hot value vectors [seq_len, value_size]
 
         c = self.c
-        keys = x[0]  
-        values_onehot = x[1].float()
-        seq_len = keys.shape[0]
+        keys = x[:, 0, :]  
+        values = x[:, 1, :]
+        seq_len = keys.shape[1]
 
         key_emb = self.key_embedding(keys)  # [seq_len, emb_dim]
-        combined = torch.cat([key_emb, values_onehot], dim=-1)  # [seq_len, emb_dim + value_size]
+        value_emb = self.value_embedding(values)
+        combined = torch.cat([key_emb, value_emb], dim=-1)  # [seq_len, emb_dim + value_size]
 
         x = self.key_value_proj(combined)  # [seq_len, h_dim]
         x = x.unsqueeze(0)  # [1, seq_len, h_dim]
@@ -92,6 +94,7 @@ class Model(torch.nn.Module):
         pos_id = torch.arange(seq_len, device=c.device).unsqueeze(0)  # [1, seq_len]
         pos = self.position_embedding(pos_id)  # [1, seq_len, h_dim]
         x = x + pos
+        x = x.squeeze(0)
 
         for layer in self.layers:
             x = layer(x, log=log)
