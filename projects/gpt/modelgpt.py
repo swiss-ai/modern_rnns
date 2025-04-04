@@ -17,6 +17,7 @@ import torch
 import numpy as np
 
 from torch import nn
+
 # from munch import Munch
 # from languini.train_lib.train_utils import check_config
 # from languini.common_lib.debug_utils import check
@@ -26,28 +27,11 @@ from projects.gpt.lib import LayerNorm
 from projects.gpt.lib import Block
 
 
-DEFAULT_CONFIG = {
-    "device": "cpu",
-    "vocab_size": 2,
-    "n_layers": 2,
-    "h_dim": 16,
-    "mlp_dim": 16,
-    "head_dim": 8,
-    "n_heads": 4,
-    "use_flash": False,
-    "seq_len": 8,
-}
-
-class Config:
-    def __init__(self, conf: dict):
-        for key, val in conf.items():
-            setattr(self, key, val)
-
 class Model(torch.nn.Module):
-    def __init__(self, config=DEFAULT_CONFIG):
+    def __init__(self, config):
         super().__init__()
         # check_config(config, DEFAULT_CONFIG)
-        self.c = c = Config(config)
+        self.c = c = config
         self.name = "GPT"
 
         self.input_embedding = nn.Embedding(c.vocab_size, c.h_dim)
@@ -113,7 +97,6 @@ class Model(torch.nn.Module):
         logits = self.linear(x)
         # print("logits", x.shape)
         # check(x, (bsz, c.vocab_size))
-
 
         return logits, state
 

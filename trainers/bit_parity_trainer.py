@@ -1,10 +1,14 @@
+import os
 import torch
 from tqdm import tqdm
+
+from common_lib import parallel_utils
 
 
 class BitParityTrainer:
     def __init__(
         self,
+        config,
         model,
         train_loader,
         eval_loader,
@@ -14,6 +18,7 @@ class BitParityTrainer:
         eval_every=1000,
         logger=None,
     ):
+        self.c = config
         self.model = model
         self.train_loader = train_loader
         self.eval_loader = eval_loader
@@ -22,7 +27,6 @@ class BitParityTrainer:
         self.max_steps = max_steps
         self.eval_every = eval_every
         self.logger = logger
-
         self.criterion = torch.nn.CrossEntropyLoss()
 
     def train(self):
@@ -54,6 +58,19 @@ class BitParityTrainer:
 
             step += 1
 
+            if (
+                parallel_utils.is_main_process()
+                and self.c.log_ckpt_every > 0
+                and step % self.c.log_ckpt_every == 0
+                and step > 0
+            ):
+                self.save_checkpoint(self.logger, step)
+
+        # Final validation run and checkpoint
+        self.evaluate(step=step)
+        if parallel_utils.is_main_process():
+            self.save_checkpoint(self.logger, step)
+
     def evaluate(self, step):
         self.model.eval()
         total_loss = 0.0
@@ -72,7 +89,7 @@ class BitParityTrainer:
 
                 labels = torch.argmax(targets, dim=2)
                 total_correct += (preds == labels).sum().item()
-                total_samples += targets.size(0)*targets.size(1)
+                total_samples += targets.size(0) * targets.size(1)
 
         avg_loss = total_loss / 10
         accuracy = total_correct / total_samples
@@ -99,7 +116,42 @@ class BitParityTrainer:
         return (
             {k: v.detach() if v is not None else None for k, v in state.items()}
             if isinstance(state, dict)
-            else [(s[0].detach(), s[1].detach()) for s in state]
-            if isinstance(state, list)
-            else state.detach()
+            else (
+                [(s[0].detach(), s[1].detach()) for s in state]
+                if isinstance(state, list)
+                else state.detach()
+            )
         )
+
+    def save_checkpoint(self, logger, step):
+        """Saves a checkpoint of the current model to disk."""
+
+        def _save_checkpoint(path):
+            # create folder if it doesn't exist
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+            # remove previous log file there is one
+            file = os.path.join(path, "model.pt")
+            if os.path.exists(file):
+                os.remove(file)
+
+            # Write checkpoint
+            with open(file, "wb") as f:
+                torch.save(
+                    {
+                        "step": step,
+                        "model_state_dict": self.model.state_dict(),
+                        "opt_state_dict": self.optimizer.state_dict(),
+                    },
+                    f,
+                )
+            print(f"Checkpoint written at step {step} to:\n{file}")
+
+        if logger.use_tb:
+            ckpt_path = os.path.join(logger.log_path, "checkpoints")
+            _save_checkpoint(ckpt_path)
+
+        if logger.use_wandb:
+            ckpt_path = os.path.join(logger.wandb_run_dir, "checkpoints")
+            _save_checkpoint(ckpt_path)

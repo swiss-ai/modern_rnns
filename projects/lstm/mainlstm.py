@@ -31,77 +31,67 @@ CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --
     --gradient_accumulation_steps 2
 """
 
+import argparse
 import os
 import sys
+
 import torch
-import argparse
-import torch.multiprocessing as mp
 
 # from languini.train_lib import lm_trainer
 # from languini.train_lib import lr_schedules
 # from languini.common_lib import parallel_utils
-# from languini.common_lib import experiment_utils
+from common_lib import experiment_utils
+from common_lib.parallel_utils import mprint
 
-
-# from languini.common_lib.parallel_utils import mprint
 # from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
-# import configs
+import configs
 from modellstm import Model
 from trainers.bit_parity_trainer import BitParityTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
-from modellstm import Model
-from modellstm import DEFAULT_CONFIG as LSTM_MODEL_DEFAULT_CONFIG
 
-SEQ_LEN = None
-BATCH_SIZE = 8
-VOCAB_SIZE = None
 
-def run(device, dataset):
+def run(config, logger):
 
-    if (dataset == "bit_parity"):
+    if config.dataset == "bit_parity":
         datasetIterator = BitParityDatasetIterator
         trainerClass = BitParityTrainer
-        MODEL_DEFAULT_CONFIG = LSTM_MODEL_DEFAULT_CONFIG
-        VOCAB_SIZE = 2
+        BATCH_SIZE = 8
     else:
         # add the configuration for each new dataset here
-        pass
-
-    SEQ_LEN = MODEL_DEFAULT_CONFIG["seq_len"]
+        raise RuntimeError(
+            f"Dataset {config.dataset} not supported. Please add the configuration for this dataset."
+        )
 
     train_ds = datasetIterator(
         batch_size=BATCH_SIZE,
-        sequence_length=SEQ_LEN,
-        device=device,
+        sequence_length=config.seq_len,
+        device=config.device,
     )
 
     eval_ds = datasetIterator(
         batch_size=BATCH_SIZE,
-        sequence_length=SEQ_LEN,
-        device=device,
+        sequence_length=config.seq_len,
+        device=config.device,
     )
 
     ## Setup Model
-    # torch.manual_seed(c.seed)
-    config = MODEL_DEFAULT_CONFIG
-    config["device"] = device
-    config["seq_len"] = SEQ_LEN
-    config["vocab_size"] = VOCAB_SIZE  # number of output classes for the task
+    torch.manual_seed(config.seed)
     model = Model(config=config)
-    model = model.to(device)
+    model = model.to(config.device)
 
     ## Setup Optimiser
     opt = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08)
 
-
     ## Setup Trainer
     trainer = trainerClass(
+        config=config,
         model=model,
         train_loader=train_ds,
         eval_loader=eval_ds,
         optimizer=opt,
-        device=device,
+        device=config.device,
+        logger=logger,
     )
 
     ## Start Experiment
@@ -112,7 +102,17 @@ def run(device, dataset):
 
 def main():
     """Runs an experiment using an LSTM model."""
+    config_name = experiment_utils.parse_config_name(configs.config_names)
+    mprint(f"Loading config: {config_name}")
 
+    # load the config file
+    config = configs.load_config(name=config_name)
+    config.project_path = os.path.dirname(os.path.abspath(__file__))
+    mprint(f"project path: {config.project_path}")
+
+    parser = experiment_utils.create_parser_based_on_config(config)
+
+    # Add custom arguments
     parser = argparse.ArgumentParser(description="LSTM Experiment")
     parser.add_argument(
         "--device",
@@ -121,17 +121,34 @@ def main():
         default="cpu",
         help="Device to use for training",
     )
-    parser.add_argument("--dataset", type=str, choices=["bit_parity", "MQAR"], default="bit_parity",
-                        help="Choose dataset: 'bit_parity' (default), 'MQAR'.")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        choices=["bit_parity", "MQAR"],
+        default="bit_parity",
+        help="Choose dataset: 'bit_parity' (default), 'MQAR'.",
+    )
+    args = parser.parse_args(sys.argv[2:])
+    config = experiment_utils.update_config_given_args(config, args)
+    config.dataset = args.dataset
 
-    if args.device == "gpu" and torch.cuda.is_available():
-        device = torch.device("cuda")
+    if args.device == "gpu":
+        if torch.cuda.is_available():
+            config.device = torch.device("cuda")
+        else:
+            mprint("Cuda is not available, using CPU instead.")
+            config.device = torch.device("cpu")
     else:
-        device = torch.device("cpu")
-    print("LSTM Experiment")
+        config.device = torch.device("cpu")
 
-    run(device, args.dataset)
+    # Generate experiment name based on config
+    configs.add_exp_name(config)
+    mprint(f"experiment name: {config.exp_name}")
+
+    # Create the log folder, backup python files, and backup the hyperparameter config to a file
+    logger = experiment_utils.setup_experiment(config)
+
+    run(config, logger)
 
 
 if __name__ == "__main__":

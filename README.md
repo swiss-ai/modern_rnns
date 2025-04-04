@@ -1,15 +1,18 @@
-# Modern RNNS 
+# Modern RNNS
 
-Codebase for the development of scalable RNNs like DeltaNet and similar. 
+Codebase for the development of scalable RNNs like DeltaNet and similar.
 
 ## How to run
- Under projects, find the model you want to run. You can specify which dataset you want to run it on by using the flag
-``
---dataset
-``.
+Under projects, find the model you want to run. Each model has a choice of configurations that are in a "configs.py" file in the same directory. The configuration name must be passed as the first argument, and then you can specify additional arguments.
 
-In case the dataset flag is not specified, the ``bit_parity`` dataset will be used by default.
+Example Commands:
+```
+# See the list of valid configurations
+python projects/lstm/mainlstm.py --help
 
-### Example 
-Say you want to run the GPT model with the Bit Parity dataset. Then run `maingpt` with the following run configuraion:
-``--dataset bit_parity``
+# See additional configuration options
+python projects/lstm/mainlstm.py [config_name] --help
+
+# Run the bit_parity dataset
+PYTHONPATH=. torchrun --standalone projects/lstm/mainlstm.py default --dataset bit_parity
+```
