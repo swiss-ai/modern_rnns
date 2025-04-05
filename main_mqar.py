@@ -2,10 +2,10 @@ import argparse
 import os
 import torch
 
-from mqar.mqar_dataset import MQARDatasetIterator
-from mqar.mqar_trainer import MQARTrainer
-from mqar.mqar_modelgpt import Model
-from mqar.mqar_modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
+from mqar.mqar_seq_dataset import MQARDatasetIterator
+from mqar.mqar_seq_trainer import MQARTrainer
+from modelgpt import Model
+from modelgpt import DEFAULT_CONFIG as MODEL_DEFAULT_CONFIG
 
 SEQ_LEN = 10 #MODEL_DEFAULT_CONFIG["seq_len"]
 

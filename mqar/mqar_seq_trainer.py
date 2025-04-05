@@ -22,7 +22,7 @@ class MQARTrainer:
         self.eval_every = eval_every
         self.logger = logger
 
-        self.criterion = torch.nn.MSELoss()
+        self.criterion = torch.nn.CrossEntropyLoss()
 
     def train(self):
         self.model.train()

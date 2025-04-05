@@ -39,8 +39,8 @@ class MQARDatasetIterator:
                 "sequence"
             )
         
-        self.key_indexes = list(range(self.n_keys))
-        self.value_indexes = list(range(self.n_keys, self.n_keys + self.n_values))
+        self.key_indexes = list(range(1, self.n_keys))
+        self.value_indexes = list(range(self.n_keys + 1, self.n_keys + self.n_values + 1))
 
     def __iter__(self):
         return self
@@ -97,7 +97,7 @@ class MQARDatasetIterator:
             ])
 
             target_value = ground_truth[query_key]
-            target_one_hot = torch.zeros(self.n_keys + self.n_values, device=self.device)
+            target_one_hot = torch.zeros(self.n_keys + self.n_values + 1, device=self.device)
             target_one_hot[target_value] = 1
 
             batch_sequences.append(extended_sequence)
