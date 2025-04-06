@@ -56,7 +56,7 @@ class Model(torch.nn.Module):
 
         self.ln_f = LayerNorm(c.h_dim, name=f"{self.name}/lnf")
 
-        self.linear = nn.Linear(c.h_dim, c.vocab_size, bias=False)
+        self.linear = nn.Linear(c.h_dim, c.output_size, bias=False)
         torch.nn.init.normal_(self.linear.weight, mean=0.0, std=0.02)
 
     def get_init_state(self, batch_size, device):

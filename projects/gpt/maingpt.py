@@ -40,9 +40,11 @@ import configs
 from common_lib import experiment_utils
 from common_lib.parallel_utils import mprint
 
+from modelgpt import Model
 from trainers.bit_parity_trainer import BitParityTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
-from modelgpt import Model
+from trainers.dyck_trainer import DyckTrainer 
+from datasets.dyck_dataset import DyckDatasetIterator
 
 SEQ_LEN = None
 BATCH_SIZE = 64
@@ -52,25 +54,42 @@ VOCAB_SIZE = None
 def run(config, logger):
 
     if config.dataset == "bit_parity":
-        datasetIterator = BitParityDatasetIterator
+        BATCH_SIZE = 8
+        train_ds = BitParityDatasetIterator(
+            batch_size=BATCH_SIZE,
+            sequence_length=config.seq_len,
+            device=config.device,
+        )
+        eval_ds = BitParityDatasetIterator(
+            batch_size=BATCH_SIZE,
+            sequence_length=config.seq_len,
+            device=config.device,
+        )
+
         trainerClass = BitParityTrainer
+    elif config.dataset == "dyck":
+        BATCH_SIZE = 8
+        train_ds = DyckDatasetIterator(
+            batch_size=BATCH_SIZE,
+            sequence_length=config.seq_len,
+            device=config.device,
+            depth=config.depth,
+            no_parantheses=config.no_parentheses
+        )
+        eval_ds = DyckDatasetIterator(
+            batch_size=BATCH_SIZE,
+            sequence_length=config.seq_len,
+            device=config.device,
+            depth=config.depth,
+            no_parantheses=config.no_parentheses
+        )
+
+        trainerClass = DyckTrainer 
     else:
         # add the configuration for each new dataset here
         raise RuntimeError(
             f"Dataset {config.dataset} not supported. Please add the configuration for this dataset."
         )
-
-    train_ds = datasetIterator(
-        batch_size=BATCH_SIZE,
-        sequence_length=config.seq_len,
-        device=config.device,
-    )
-
-    eval_ds = datasetIterator(
-        batch_size=BATCH_SIZE,
-        sequence_length=config.seq_len,
-        device=config.device,
-    )
 
     ## Setup Model
     torch.manual_seed(config.seed)
@@ -118,9 +137,9 @@ def main():
     parser.add_argument(
         "--dataset",
         type=str,
-        choices=["bit_parity", "MQAR"],
+        choices=["bit_parity", "dyck", "MQAR"],
         default="bit_parity",
-        help="Choose dataset: 'bit_parity' (default), 'MQAR'.",
+        help="Choose dataset: 'bit_parity' (default), 'dyck', 'MQAR'.",
     )
     args = parser.parse_args(sys.argv[2:])
     config = experiment_utils.update_config_given_args(config, args)
