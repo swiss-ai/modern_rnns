@@ -88,7 +88,8 @@ def load_config(name=None):
     # model
     c.non_quasi = False
     if name == "mini":
-        c.vocab_size = 2
+        c.output_size = 2
+        c.vocab_size = 8
         c.n_layers = 2
         c.h_dim = 8
         c.mlp_dim = 8
@@ -97,6 +98,8 @@ def load_config(name=None):
         c.non_quasi = False
         c.block_length = 8
         c.seq_len = 8
+        c.depth = 3
+        c.no_parentheses = 4
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 
