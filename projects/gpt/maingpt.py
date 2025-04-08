@@ -68,14 +68,14 @@ def run(config, logger):
             sequence_length=config.seq_len,
             device=config.device,
             depth=config.depth,
-            no_parantheses=config.no_parentheses,
+            num_parentheses=config.num_parentheses,
         )
         eval_ds = DyckDatasetIterator(
             batch_size=config.eval_batch_size,
             sequence_length=config.seq_len,
             device=config.device,
             depth=config.depth,
-            no_parantheses=config.no_parentheses,
+            num_parentheses=config.num_parentheses,
         )
         config.num_input_classes = config.no_parentheses * 2
 
@@ -121,7 +121,6 @@ def main():
 
     parser = experiment_utils.create_parser_based_on_config(config)
 
-    parser = argparse.ArgumentParser(description="GPT Experiment")
     parser.add_argument(
         "--device",
         type=str,

@@ -87,17 +87,21 @@ def load_config(name=None):
     # model
     c.non_quasi = False
     if name == "mini":
-        c.output_size = 2
-        c.num_input_classes = 2
         c.n_layers = 2
         c.h_dim = 16
         c.mlp_dim = 16
         c.head_dim = 8
         c.n_heads = 4
         c.use_flash = False
+
+        # Dataset config
+        c.output_size = 2
+        c.num_input_classes = 2
         c.seq_len = 8
+
+        # Dyck specific
         c.depth = 3
-        c.no_parentheses = 4
+        c.num_parentheses = 4
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

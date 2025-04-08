@@ -88,8 +88,6 @@ def load_config(name=None):
     # model
     c.non_quasi = False
     if name == "mini":
-        c.output_size = 2
-        c.num_input_classes = 8
         c.n_layers = 2
         c.h_dim = 8
         c.mlp_dim = 8
@@ -97,9 +95,15 @@ def load_config(name=None):
         c.n_heads = 2  # change for q lstm
         c.non_quasi = False
         c.block_length = 8
+
+        # Dataset config
+        c.output_size = 2
+        c.num_input_classes = 8
         c.seq_len = 8
+
+        # Dyck specific
         c.depth = 3
-        c.no_parentheses = 4
+        c.num_parentheses = 4
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 
