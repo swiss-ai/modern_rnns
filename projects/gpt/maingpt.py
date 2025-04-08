@@ -42,49 +42,43 @@ from common_lib.parallel_utils import mprint
 
 from modelgpt import Model
 from trainers.bit_parity_trainer import BitParityTrainer
+from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
-from trainers.dyck_trainer import DyckTrainer 
 from datasets.dyck_dataset import DyckDatasetIterator
-
-SEQ_LEN = None
-BATCH_SIZE = 64
-VOCAB_SIZE = None
 
 
 def run(config, logger):
 
     if config.dataset == "bit_parity":
-        BATCH_SIZE = 8
         train_ds = BitParityDatasetIterator(
-            batch_size=BATCH_SIZE,
+            batch_size=config.train_batch_size,
             sequence_length=config.seq_len,
             device=config.device,
         )
         eval_ds = BitParityDatasetIterator(
-            batch_size=BATCH_SIZE,
+            batch_size=config.eval_batch_size,
             sequence_length=config.seq_len,
             device=config.device,
         )
 
         trainerClass = BitParityTrainer
     elif config.dataset == "dyck":
-        BATCH_SIZE = 8
         train_ds = DyckDatasetIterator(
-            batch_size=BATCH_SIZE,
+            batch_size=config.train_batch_size,
             sequence_length=config.seq_len,
             device=config.device,
             depth=config.depth,
-            no_parantheses=config.no_parentheses
+            no_parantheses=config.no_parentheses,
         )
         eval_ds = DyckDatasetIterator(
-            batch_size=BATCH_SIZE,
+            batch_size=config.eval_batch_size,
             sequence_length=config.seq_len,
             device=config.device,
             depth=config.depth,
-            no_parantheses=config.no_parentheses
+            no_parantheses=config.no_parentheses,
         )
 
-        trainerClass = DyckTrainer 
+        trainerClass = DyckTrainer
     else:
         # add the configuration for each new dataset here
         raise RuntimeError(

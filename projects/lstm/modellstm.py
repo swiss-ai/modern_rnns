@@ -13,12 +13,9 @@
 # limitations under the License.
 
 import math
+
 import torch
-
-# import numpy as np
-
 from torch import nn
-from torch.nn import LayerNorm
 
 from projects.lstm.lib import LayerNorm
 from projects.lstm.lib import Block
@@ -30,7 +27,7 @@ class Model(torch.nn.Module):
         self.c = c = config
         self.name = "LSTM"
 
-        self.input_embedding = nn.Embedding(c.vocab_size, c.h_dim)
+        self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
         self.position_embedding = nn.Embedding(c.seq_len, c.h_dim)

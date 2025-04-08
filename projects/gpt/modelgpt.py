@@ -14,7 +14,6 @@
 
 import math
 import torch
-import numpy as np
 
 from torch import nn
 
@@ -34,7 +33,7 @@ class Model(torch.nn.Module):
         self.c = c = config
         self.name = "GPT"
 
-        self.input_embedding = nn.Embedding(c.vocab_size, c.h_dim)
+        self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
         self.position_embedding = nn.Embedding(c.seq_len, c.h_dim)
@@ -99,42 +98,3 @@ class Model(torch.nn.Module):
         # check(x, (bsz, c.vocab_size))
 
         return logits, state
-
-
-if __name__ == "__main__":
-    # dummy config
-    # c = Munch()
-    c = Config(DEFAULT_CONFIG)
-    c.h_dim = 128
-    c.mlp_dim = 256
-    c.head_dim = 16
-    c.n_heads = 8
-    c.n_layers = 2
-
-    c.batch_size = 8
-    c.seq_len = 512
-    c.vocab_size = 1
-    c.use_flash = False
-    if torch.cuda.is_available():
-        c.device = "cuda"
-        c.n_workers = torch.cuda.device_count()
-    else:
-        c.device = "cpu"
-        c.n_workers = 1
-    c.device_batch_size = c.batch_size // c.n_workers
-
-    model = Model(config=c).to(c.device)
-
-    dummy_x = torch.tensor(
-        np.random.choice(
-            a=range(c.vocab_size), size=(c.batch_size, c.seq_len), replace=True
-        )
-    )
-    dummy_x = dummy_x.to(c.device)
-    print(f"{dummy_x.shape=}")
-
-    state = model.get_init_state(batch_size=c.batch_size, device=c.device)
-    logits, state = model(dummy_x, state)
-    print(f"{logits.shape=}")
-
-    print(model)

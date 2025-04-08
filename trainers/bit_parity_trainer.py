@@ -1,6 +1,5 @@
 import os
 import torch
-from tqdm import tqdm
 
 from common_lib import parallel_utils
 

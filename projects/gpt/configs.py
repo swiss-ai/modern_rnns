@@ -56,9 +56,9 @@ def load_config(name=None):
         # # optimiser
         seed=41,
         # gradient_accumulation_steps = 1,    # number of batches before doing a gradient step
-        # train_batch_size = 16,              # make sure batch sizes are an integer multiple of the number of workers
-        # eval_batch_size = 16,
-        # test_batch_size = 16,
+        train_batch_size=8,  # make sure batch sizes are an integer multiple of the number of workers
+        eval_batch_size=8,
+        test_batch_size=8,
         # seq_len = 512,
         # max_eval_steps = 512,
         # max_train_steps = 500_000,          # total number of training steps
@@ -88,7 +88,7 @@ def load_config(name=None):
     c.non_quasi = False
     if name == "mini":
         c.output_size = 2
-        c.vocab_size = 8
+        c.num_input_classes = 2
         c.n_layers = 2
         c.h_dim = 16
         c.mlp_dim = 16
