@@ -36,37 +36,37 @@ class DyckDatasetIterator:
         # Computes the correctness of
         labels = []
         stack = []
-        not_matching_closed = False
+        not_matching_closed = True 
 
         for paranthesis in sequence:
             if self.__is_opening_paranthesis(paranthesis):
                 stack.append(paranthesis)
-                labels.append(self.__one_hot_label(False))
+                labels.append(self.__one_hot_label(False 
+                                                   and not_matching_closed))
                 continue
 
             if len(stack) == 0:
-                not_matching_closed = True
-                labels.append(self.__one_hot_label(False or not not_matching_closed))
+                not_matching_closed = False 
+                labels.append(self.__one_hot_label(False))
                 continue
                 
             if self.__get_closing_paranthesis(stack[-1]) == paranthesis:
                 stack.pop()
-                labels.append(self.__one_hot_label(len(stack) == 0))
+                labels.append(self.__one_hot_label(len(stack) == 0 
+                                                   and not_matching_closed))
                 continue
 
-            not_matching_closed = True
-            labels.append(self.__one_hot_label(False or not not_matching_closed))
-                
+            not_matching_closed = False 
+            labels.append(self.__one_hot_label(False))
         
         return labels
 
     def __shuffle_sample(self, sequence, labels):
         valid_positions = [i for i, x in enumerate(labels[:-1]) if x == [1.0, 0.0]]
         if len(valid_positions) == 0:
-            shuffled_sequence = sequence
-            np.random.shuffle(shuffled_sequence)
-            shuffled_sequence_labels = self.__compute_labels(shuffled_sequence)
-            return shuffled_sequence, shuffled_sequence_labels 
+            np.random.shuffle(sequence)
+            shuffled_sequence_labels = self.__compute_labels(sequence)
+            return sequence, shuffled_sequence_labels 
 
         start_shuffle_position = np.random.choice(valid_positions)
 
