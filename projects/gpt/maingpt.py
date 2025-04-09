@@ -77,6 +77,7 @@ def run(config, logger):
             depth=config.depth,
             no_parantheses=config.no_parentheses,
         )
+        config.num_input_classes = config.no_parentheses * 2
 
         trainerClass = DyckTrainer
     else:

@@ -89,7 +89,7 @@ def load_config(name=None):
     c.non_quasi = False
     if name == "mini":
         c.output_size = 2
-        c.num_input_classes = 2
+        c.num_input_classes = 8
         c.n_layers = 2
         c.h_dim = 8
         c.mlp_dim = 8

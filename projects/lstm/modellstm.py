@@ -27,6 +27,7 @@ class Model(torch.nn.Module):
         self.c = c = config
         self.name = "LSTM"
 
+        print(c.num_input_classes)
         self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
