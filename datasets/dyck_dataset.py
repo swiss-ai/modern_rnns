@@ -63,16 +63,16 @@ class DyckDatasetIterator:
     def __shuffle_sample(self, sequence, labels):
         valid_positions = [i for i, x in enumerate(labels[:-1]) if x == [1.0, 0.0]]
         if len(valid_positions) == 0:
-            return sequence, labels
-        print('changed', sequence)
+            shuffled_sequence = sequence
+            np.random.shuffle(shuffled_sequence)
+            shuffled_sequence_labels = self.__compute_labels(shuffled_sequence)
+            return shuffled_sequence, shuffled_sequence_labels 
 
         start_shuffle_position = np.random.choice(valid_positions)
-        print(start_shuffle_position)
 
         shuffled_sequence = sequence[start_shuffle_position + 1:]
         np.random.shuffle(shuffled_sequence)
         shuffled_sequence_labels = self.__compute_labels(shuffled_sequence)
-        print(shuffled_sequence)
 
         sequence[start_shuffle_position + 1:] = shuffled_sequence
         labels[start_shuffle_position + 1:] = shuffled_sequence_labels
