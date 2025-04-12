@@ -97,11 +97,16 @@ def load_config(name=None):
         # Dataset config
         c.output_size = 2
         c.num_input_classes = 2
-        c.seq_len = 8
 
         # Dyck specific
         c.depth = 3
         c.num_parentheses = 4
+        c.seq_len = 8
+
+        # Bit parity specific
+        c.train_seq_len = "8,8"
+        c.eval_seq_len = "8,8"
+        c.max_seq_len = 8
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

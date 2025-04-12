@@ -18,7 +18,7 @@ import torch.nn.functional as F
 
 from torch import nn
 from common_lib.debug_utils import check
-# from languini.common_lib.debug_utils import log_stats_and_dist
+from common_lib.debug_utils import log_stats_and_dist
 
 
 def gelu(x):
@@ -26,7 +26,14 @@ def gelu(x):
     Gaussian Error Linear Unit (GELU)
     https://arxiv.org/abs/1606.08415
     """
-    return 0.5 * x * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0))))
+    return (
+        0.5
+        * x
+        * (
+            1.0
+            + torch.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0)))
+        )
+    )
 
 
 class LayerNorm(nn.Module):
@@ -131,7 +138,7 @@ class MultiHeadLSTMCell(nn.Module):
         outputs = []
         for idx in range(self.seq_len):
             check(h, (bsz, self.n_heads, self.head_dim))
-            h = h.view(bsz, self.n_heads * self.head_dim )
+            h = h.view(bsz, self.n_heads * self.head_dim)
 
             # gate contribution of the current state
             fh = self.linear_Fh(h)  # forget gate
@@ -176,7 +183,9 @@ class MultiHeadLSTMCell(nn.Module):
 class MultiHeadQuasiLSTMCell(nn.Module):
     """Implements an LSTM cell where every gate only depends on x and not on h for better parallelisation."""
 
-    def __init__(self, seq_len, h_dim, head_dim, n_heads, name, block_length, max_seq_len=2048):
+    def __init__(
+        self, seq_len, h_dim, head_dim, n_heads, name, block_length, max_seq_len=2048
+    ):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
@@ -203,11 +212,15 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         torch.nn.init.zeros_(self.linear_Ox.bias)
 
         # masks used to parallelise the quasi-lstm computation
-        ones_mask = torch.tril(torch.ones((max_seq_len + 1, max_seq_len)), diagonal=-1).T
+        ones_mask = torch.tril(
+            torch.ones((max_seq_len + 1, max_seq_len)), diagonal=-1
+        ).T
         ones_mask = torch.reshape(ones_mask, (1, 1, 1, max_seq_len, max_seq_len + 1))
         self.register_buffer("ones_mask", ones_mask)
 
-        zeros_mask = torch.tril(torch.ones((max_seq_len + 1, max_seq_len)), diagonal=-2).T
+        zeros_mask = torch.tril(
+            torch.ones((max_seq_len + 1, max_seq_len)), diagonal=-2
+        ).T
         zeros_mask = torch.reshape(zeros_mask, (1, 1, 1, max_seq_len, max_seq_len + 1))
         self.register_buffer("zeros_mask", zeros_mask)
 
@@ -244,17 +257,25 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         assert self.seq_len % self.block_length == 0
         n_blocks = self.seq_len // self.block_length
 
-        fx = fx.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        ix = ix.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        zx = zx.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        ox = ox.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
+        fx = fx.view(
+            bsz, n_blocks, self.block_length, self.n_heads, self.head_dim
+        ).permute(1, 0, 3, 4, 2)
+        ix = ix.view(
+            bsz, n_blocks, self.block_length, self.n_heads, self.head_dim
+        ).permute(1, 0, 3, 4, 2)
+        zx = zx.view(
+            bsz, n_blocks, self.block_length, self.n_heads, self.head_dim
+        ).permute(1, 0, 3, 4, 2)
+        ox = ox.view(
+            bsz, n_blocks, self.block_length, self.n_heads, self.head_dim
+        ).permute(1, 0, 3, 4, 2)
         check(fx, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
 
         f = torch.sigmoid(fx + 1.0)
         o = torch.sigmoid(ox)
         check(f, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
 
-        update = (torch.sigmoid(ix) * torch.tanh(zx))
+        update = torch.sigmoid(ix) * torch.tanh(zx)
         check(update, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
 
         # below is the slow implementation
@@ -268,12 +289,12 @@ class MultiHeadQuasiLSTMCell(nn.Module):
             c = c * f[block_idx,:,:,:,step_idx] + update[block_idx,:,:,:,step_idx]
             check(c, (bsz, self.n_heads, self.head_dim))
             curr_cs.append(c)
-    
+
             #h = o[block_idx,:,:,:,step_idx] * torch.tanh(c)
             #check(h, (bsz, self.n_heads, self.head_dim))
-    
+
             #curr_hs.append(h)
-    
+
           cs = torch.stack(curr_cs, dim=-1)
           hs = o[block_idx] * torch.tanh(cs)
           check(hs, (bsz, self.n_heads, self.head_dim, self.block_length))
@@ -291,10 +312,15 @@ class MultiHeadQuasiLSTMCell(nn.Module):
             # check(curr_f, (bsz, self.n_heads, self.head_dim, self.block_length))
 
             # concatenate a 1.0 to the list of forget gates
-            curr_f = torch.concatenate([
-                curr_f,
-                torch.ones((bsz, self.n_heads, self.head_dim, 1), device=curr_f.device)
-            ], dim=3)
+            curr_f = torch.concatenate(
+                [
+                    curr_f,
+                    torch.ones(
+                        (bsz, self.n_heads, self.head_dim, 1), device=curr_f.device
+                    ),
+                ],
+                dim=3,
+            )
             # check(curr_f, (bsz, self.n_heads, self.head_dim, self.block_length + 1))
 
             # tile curr_f to construct the matrix F
@@ -302,14 +328,27 @@ class MultiHeadQuasiLSTMCell(nn.Module):
             # check(F, (bsz, self.n_heads, self.head_dim, self.block_length, self.block_length + 1))
 
             # mask upper triangle part with ones
-            F = F.masked_fill(self.ones_mask[:, :, :, :self.block_length, :self.block_length + 1] == 1.0, 1.0)
+            F = F.masked_fill(
+                self.ones_mask[:, :, :, : self.block_length, : self.block_length + 1]
+                == 1.0,
+                1.0,
+            )
 
             # compute factorials and mask out the lower part again
             # uses cumsum because cumprod backward results in errors
-            F = torch.cumsum(torch.log(F + 1e-8).flip(dims=[-1]), dim=-1).flip(dims=[-1]).exp() - 1e-8
+            F = (
+                torch.cumsum(torch.log(F + 1e-8).flip(dims=[-1]), dim=-1)
+                .flip(dims=[-1])
+                .exp()
+                - 1e-8
+            )
 
             # mask upper triangle with zeroes
-            F = F.masked_fill(self.zeros_mask[:, :, :, :self.block_length, :self.block_length + 1] == 1.0, 0.0)
+            F = F.masked_fill(
+                self.zeros_mask[:, :, :, : self.block_length, : self.block_length + 1]
+                == 1.0,
+                0.0,
+            )
 
             # concatenate previous cell state with the cell updates
             # check(c, (bsz, self.n_heads, self.head_dim))
@@ -340,7 +379,9 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         state = last_c, last_h
 
         # project all outputs
-        y = hs.permute(1, 0, 4, 2, 3).reshape(bsz, self.seq_len, self.n_heads * self.head_dim)
+        y = hs.permute(1, 0, 4, 2, 3).reshape(
+            bsz, self.seq_len, self.n_heads * self.head_dim
+        )
         y = self.linear_post_head(y)
         # check(y, (bsz, self.seq_len, self.h_dim))
 
@@ -364,7 +405,9 @@ class MLP(torch.nn.Module):
         torch.nn.init.zeros_(self.c_fc.bias)
 
         self.c_proj = nn.Linear(mlp_dim, h_dim, bias=True)
-        torch.nn.init.normal_(self.c_proj.weight, mean=0.0, std=0.02 / math.sqrt(2 * self.n_layers))
+        torch.nn.init.normal_(
+            self.c_proj.weight, mean=0.0, std=0.02 / math.sqrt(2 * self.n_layers)
+        )
         torch.nn.init.zeros_(self.c_proj.bias)
 
     def forward(self, x, log=None):
@@ -389,7 +432,18 @@ class MLP(torch.nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, non_quasi, block_length, name):
+    def __init__(
+        self,
+        seq_len,
+        h_dim,
+        mlp_dim,
+        head_dim,
+        n_heads,
+        n_layers,
+        non_quasi,
+        block_length,
+        name,
+    ):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
@@ -398,22 +452,36 @@ class Block(nn.Module):
 
         self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
         if self.non_quasi:
-            self.rnn = MultiHeadLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
-                                         name=f"{self.name}.MultiHeadLSTM")
+            self.rnn = MultiHeadLSTMCell(
+                seq_len=seq_len,
+                h_dim=h_dim,
+                head_dim=head_dim,
+                n_heads=n_heads,
+                name=f"{self.name}.MultiHeadLSTM",
+            )
         else:
-            self.rnn = MultiHeadQuasiLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
-                                              block_length=block_length,
-                                              name=f"{self.name}.MultiHeadQuasiLSTM")
+            self.rnn = MultiHeadQuasiLSTMCell(
+                seq_len=seq_len,
+                h_dim=h_dim,
+                head_dim=head_dim,
+                n_heads=n_heads,
+                block_length=block_length,
+                name=f"{self.name}.MultiHeadQuasiLSTM",
+            )
 
         self.ln2 = LayerNorm(h_dim, name=f"{self.name}.ln2")
-        self.mlp = MLP(h_dim=h_dim, mlp_dim=mlp_dim, n_layers=n_layers, name=f"{self.name}.MLP")
+        self.mlp = MLP(
+            h_dim=h_dim, mlp_dim=mlp_dim, n_layers=n_layers, name=f"{self.name}.MLP"
+        )
 
     def forward(self, x, state, log=None):
         bsz, _, _ = x.shape
         # check(x, (bsz, self.seq_len, self.h_dim))
 
         ln_x = self.ln1(x, log=log)
-        rnn_x, new_state = self.rnn(f_in=ln_x, i_in=ln_x, z_in=ln_x, o_in=ln_x, state=state, log=log)
+        rnn_x, new_state = self.rnn(
+            f_in=ln_x, i_in=ln_x, z_in=ln_x, o_in=ln_x, state=state, log=log
+        )
         # log_stats_and_dist(rnn_x, f"{self.name}.rnn_delta", log)
         x = x + rnn_x
 

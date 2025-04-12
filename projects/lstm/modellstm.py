@@ -27,18 +27,17 @@ class Model(torch.nn.Module):
         self.c = c = config
         self.name = "LSTM"
 
-        print(c.num_input_classes)
-        self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
+        self.input_embedding = nn.Embedding(c.max_seq_len, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
-        self.position_embedding = nn.Embedding(c.seq_len, c.h_dim)
-        torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
+        # self.position_embedding = nn.Embedding(c.max_seq_len, c.h_dim)
+        # torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
 
         self.layers = nn.ModuleList([])
         for i in range(c.n_layers):
             self.layers.append(
                 Block(
-                    seq_len=c.seq_len,
+                    seq_len=c.max_seq_len,
                     h_dim=c.h_dim,
                     mlp_dim=c.mlp_dim,
                     head_dim=c.head_dim,

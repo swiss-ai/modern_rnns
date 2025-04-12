@@ -58,12 +58,14 @@ def run(config, logger):
     if config.dataset == "bit_parity":
         train_ds = BitParityDatasetIterator(
             batch_size=config.train_batch_size,
-            sequence_length=config.seq_len,
+            sequence_length=config.train_seq_len,
+            pad_sequence_length=config.max_seq_len,
             device=config.device,
         )
         eval_ds = BitParityDatasetIterator(
-            batch_size=config.train_batch_size,
-            sequence_length=config.seq_len,
+            batch_size=config.eval_batch_size,
+            sequence_length=config.eval_seq_len,
+            pad_sequence_length=config.max_seq_len,
             device=config.device,
         )
 
@@ -77,7 +79,7 @@ def run(config, logger):
             num_parentheses=config.num_parentheses,
         )
         eval_ds = DyckDatasetIterator(
-            batch_size=config.train_batch_size,
+            batch_size=config.eval_batch_size,
             sequence_length=config.seq_len,
             device=config.device,
             depth=config.depth,

@@ -1,7 +1,7 @@
 import os
 import torch
 
-from common_lib import parallel_utils
+from common_lib import debug_utils, parallel_utils
 
 
 class BitParityTrainer:
@@ -37,11 +37,13 @@ class BitParityTrainer:
             inputs, targets = next(self.train_loader)
 
             logits, state = self.model(inputs, state)
-
-            loss = self.criterion(logits, targets)
+            targets = torch.argmax(targets, dim=2)
+            loss = self.criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
 
             self.optimizer.zero_grad()
             loss.backward()
+            # debug_utils.log_weight_stats(self.model, "Weights", log=(self.logger, step))
+            # debug_utils.log_gradient_stats(self.model, "Grads", log=(self.logger, step))
             self.optimizer.step()
 
             # Detach state so it doesn’t backpropagate through the whole history
