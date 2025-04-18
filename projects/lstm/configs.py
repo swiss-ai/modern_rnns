@@ -88,8 +88,8 @@ def load_config(name=None):
     # model
     c.non_quasi = False
     if name == "mini":
-        c.n_layers = 2
-        c.h_dim = 8
+        c.n_layers = 1
+        c.h_dim = 2
         c.mlp_dim = 8
         c.head_dim = 4  # change for q lstm
         c.n_heads = 2  # change for q lstm

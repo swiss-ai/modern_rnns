@@ -36,6 +36,7 @@ class BitParityTrainer:
         while step < self.max_steps:
             inputs, targets = next(self.train_loader)
 
+            state = self._init_state()
             logits, state = self.model(inputs, state)
             targets = torch.argmax(targets, dim=2)
             loss = self.criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
@@ -82,6 +83,7 @@ class BitParityTrainer:
         with torch.no_grad():
             for _ in range(10):  # Evaluate on 10 batches
                 inputs, targets = next(self.eval_loader)
+                state = self._init_state()
                 logits, state = self.model(inputs, state)
                 loss = self.criterion(logits, targets)
                 total_loss += loss.item()
@@ -114,6 +116,10 @@ class BitParityTrainer:
     def _detach_state(self, state):
         if state is None:
             return None
+        if isinstance(state, tuple):
+            state[0].detach()
+            state[1].detach()
+            return
         return (
             {k: v.detach() if v is not None else None for k, v in state.items()}
             if isinstance(state, dict)
