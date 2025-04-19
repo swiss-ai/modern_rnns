@@ -46,7 +46,7 @@ from common_lib.parallel_utils import mprint
 # from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
 import configs
-from modellstm import Model
+from basic_lstm_model import Model
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
