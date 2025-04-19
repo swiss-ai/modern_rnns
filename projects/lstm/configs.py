@@ -96,13 +96,12 @@ def load_config(name=None):
         c.block_length = 2
         c.non_quasi = False
 
-
         # Dataset config
         c.output_size = 2
         c.num_input_classes = 2
 
         # Dyck specific
-        c.depth = 2
+        c.depth = 1
         c.num_parentheses = 1
         c.seq_len = 8
 
