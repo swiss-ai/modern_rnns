@@ -73,19 +73,21 @@ def run(config, logger):
     elif config.dataset == "dyck":
         train_ds = DyckDatasetIterator(
             batch_size=config.train_batch_size,
-            sequence_length=config.seq_len,
+            sequence_length=config.train_seq_len,
+            pad_sequence_length=config.max_seq_len,
             device=config.device,
             depth=config.depth,
             num_parentheses=config.num_parentheses,
         )
         eval_ds = DyckDatasetIterator(
             batch_size=config.eval_batch_size,
-            sequence_length=config.seq_len,
+            sequence_length=config.eval_seq_len,
+            pad_sequence_length=config.max_seq_len,
             device=config.device,
             depth=config.depth,
             num_parentheses=config.num_parentheses,
         )
-        config.num_input_classes = config.num_parentheses * 2
+        config.num_input_classes = config.num_parentheses * 2 + 1
 
         trainerClass = DyckTrainer
     else:

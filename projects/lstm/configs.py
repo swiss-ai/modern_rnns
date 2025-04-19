@@ -101,8 +101,8 @@ def load_config(name=None):
         c.num_input_classes = 8
 
         # Dyck specific
-        c.depth = 3
-        c.num_parentheses = 4
+        c.depth = 2
+        c.num_parentheses = 1
         c.seq_len = 8
 
         # Bit parity specific

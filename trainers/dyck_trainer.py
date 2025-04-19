@@ -33,22 +33,32 @@ class DyckTrainer:
         self.model.train()
         step = 0
         state = self._init_state()
+        total_correct = 0
+        total_samples = 0
 
         while step < self.max_steps:
             inputs, targets = next(self.train_loader)
 
+            state = self._init_state()
             logits, state = self.model(inputs, state)
-
-            loss = self.criterion(logits, targets)
+            targets = torch.argmax(targets, dim=2)
+            loss = self.criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
+            preds = torch.argmax(logits, dim=2)
+
+            total_correct += (preds == targets).sum().item()
+            total_samples += targets.size(0) * targets.size(1)
+
             # Detach state so it doesn’t backpropagate through the whole history
             state = self._detach_state(state)
 
             if step % 100 == 0:
+                accuracy = total_correct / total_samples
+                total_samples = total_correct = 0
                 print(f"[Step {step}] Train loss: {loss.item():.4f}")
                 if self.logger:
                     self.logger.log({"train/loss": loss.item()}, step)
@@ -81,13 +91,15 @@ class DyckTrainer:
         with torch.no_grad():
             for _ in range(10):  # Evaluate on 10 batches
                 inputs, targets = next(self.eval_loader)
+                labels = torch.argmax(targets, dim=2)
+                state = self._init_state()
+
                 logits, state = self.model(inputs, state)
-                loss = self.criterion(logits, targets)
+                loss = self.criterion(logits.view(-1, logits.size(-1)), labels.view(-1))
                 total_loss += loss.item()
 
                 preds = torch.argmax(logits, dim=2)
 
-                labels = torch.argmax(targets, dim=2)
                 total_correct += (preds == labels).sum().item()
                 total_samples += targets.size(0) * targets.size(1)
 
@@ -113,6 +125,10 @@ class DyckTrainer:
     def _detach_state(self, state):
         if state is None:
             return None
+        if isinstance(state, tuple):
+            state[0].detach()
+            state[1].detach()
+            return
         return (
             {k: v.detach() if v is not None else None for k, v in state.items()}
             if isinstance(state, dict)

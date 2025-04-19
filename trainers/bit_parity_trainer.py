@@ -83,14 +83,15 @@ class BitParityTrainer:
         with torch.no_grad():
             for _ in range(10):  # Evaluate on 10 batches
                 inputs, targets = next(self.eval_loader)
+                labels = torch.argmax(targets, dim=2)
                 state = self._init_state()
+
                 logits, state = self.model(inputs, state)
-                loss = self.criterion(logits, targets)
+                loss = self.criterion(logits.view(-1, logits.size(-1)), labels.view(-1))
                 total_loss += loss.item()
 
                 preds = torch.argmax(logits, dim=2)
 
-                labels = torch.argmax(targets, dim=2)
                 total_correct += (preds == labels).sum().item()
                 total_samples += targets.size(0) * targets.size(1)
 
