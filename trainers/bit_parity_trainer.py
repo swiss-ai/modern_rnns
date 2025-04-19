@@ -43,8 +43,6 @@ class BitParityTrainer:
 
             self.optimizer.zero_grad()
             loss.backward()
-            # debug_utils.log_weight_stats(self.model, "Weights", log=(self.logger, step))
-            # debug_utils.log_gradient_stats(self.model, "Grads", log=(self.logger, step))
             self.optimizer.step()
 
             # Detach state so it doesn’t backpropagate through the whole history
@@ -117,19 +115,35 @@ class BitParityTrainer:
     def _detach_state(self, state):
         if state is None:
             return None
-        if isinstance(state, tuple):
-            state[0].detach()
-            state[1].detach()
-            return
-        return (
-            {k: v.detach() if v is not None else None for k, v in state.items()}
-            if isinstance(state, dict)
-            else (
-                [(s[0].detach(), s[1].detach()) for s in state]
-                if isinstance(state, list)
-                else state.detach()
-            )
-        )
+        if isinstance(state, torch.Tensor):
+            return state.detach()
+        elif isinstance(state, tuple):
+            return tuple(s.detach() if s is not None else None for s in state)
+        elif isinstance(state, list):
+            return [(s[0].detach(), s[1].detach()) for s in state]
+        elif isinstance(state, dict):
+            return {k: v.detach() if v is not None else None for k, v in state.items()}
+        else:
+            raise TypeError(f"Unrecognized state type: {type(state)}")
+
+        ### old detach function - delete if the new one indeed works
+    # def _detach_state(self, state):
+    #     # return [(h.detach(), c.detach()) for (h, c) in state]
+    #     if state is None:
+    #         return None
+    #     if isinstance(state, tuple):
+    #         state[0].detach()
+    #         state[1].detach()
+    #         return
+    #     return (
+    #         {k: v.detach() if v is not None else None for k, v in state.items()}
+    #         if isinstance(state, dict)
+    #         else (
+    #             [(s[0].detach(), s[1].detach()) for s in state]
+    #             if isinstance(state, list)
+    #             else state.detach()
+    #         )
+    #     )
 
     def save_checkpoint(self, logger, step):
         """Saves a checkpoint of the current model to disk."""

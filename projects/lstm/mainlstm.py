@@ -46,7 +46,7 @@ from common_lib.parallel_utils import mprint
 # from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
 import configs
-from basic_lstm_model import Model
+from modellstm import Model
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
@@ -102,7 +102,7 @@ def run(config, logger):
     model = model.to(config.device)
 
     ## Setup Optimiser
-    opt = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08)
+    opt = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.95), eps=1e-08)
 
     ## Setup Trainer
     trainer = trainerClass(

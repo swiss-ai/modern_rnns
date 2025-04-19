@@ -27,10 +27,10 @@ class Model(torch.nn.Module):
         self.c = c = config
         self.name = "LSTM"
 
-        self.input_embedding = nn.Embedding(c.max_seq_len, c.h_dim)
+        self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
-        # self.position_embedding = nn.Embedding(c.max_seq_len, c.h_dim)
+        # self.position_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         # torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
 
         self.layers = nn.ModuleList([])

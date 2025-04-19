@@ -8,7 +8,7 @@ class BitParityDatasetIterator:
 
         Args:
             batch_size (int): Number of sequences per batch.
-            sequence_length (int): Length of each binary sequence.
+            sequence_length (string): String concatenating the min and max lengths of the sequence.
             pad_sequence_length (int): Maximum possible length of the binary sequence.
                 It pads all sequences to this length.
             device (str): Device to store the tensors ('cpu' or 'cuda').

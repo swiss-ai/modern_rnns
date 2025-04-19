@@ -57,9 +57,9 @@ def load_config(name=None):
         # # optimiser
         seed=41,
         # gradient_accumulation_steps = 1,    # number of batches before doing a gradient step
-        train_batch_size=8,  # make sure batch sizes are an integer multiple of the number of workers
-        eval_batch_size=8,
-        test_batch_size=8,
+        train_batch_size=1,  # make sure batch sizes are an integer multiple of the number of workers
+        eval_batch_size=1,
+        test_batch_size=1,
         # seq_len = 512,
         # max_eval_steps = 512,
         # max_train_steps = 500_000,          # total number of training steps
@@ -88,17 +88,18 @@ def load_config(name=None):
     # model
     c.non_quasi = False
     if name == "mini":
-        c.n_layers = 1
-        c.h_dim = 2
+        c.n_layers = 2
+        c.h_dim = 16
         c.mlp_dim = 8
-        c.head_dim = 4  # change for q lstm
+        c.head_dim = 2  # change for q lstm
         c.n_heads = 2  # change for q lstm
+        c.block_length = 2
         c.non_quasi = False
-        c.block_length = 8
+
 
         # Dataset config
         c.output_size = 2
-        c.num_input_classes = 8
+        c.num_input_classes = 2
 
         # Dyck specific
         c.depth = 2
@@ -106,9 +107,9 @@ def load_config(name=None):
         c.seq_len = 8
 
         # Bit parity specific
-        c.train_seq_len = "4,4"
-        c.eval_seq_len = "4,4"
-        c.max_seq_len = 4
+        c.train_seq_len = "8,8"
+        c.eval_seq_len = "8,8"
+        c.max_seq_len = 8
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 
