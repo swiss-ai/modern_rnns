@@ -40,11 +40,13 @@ import configs
 from common_lib import experiment_utils
 from common_lib.parallel_utils import mprint
 
+from datasets.mqar_dataset import MQARDatasetIterator
 from modelgpt import Model
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
 from datasets.dyck_dataset import DyckDatasetIterator
+from trainers.mqar_trainer import MQARTrainer
 
 
 def run(config, logger):
@@ -84,6 +86,32 @@ def run(config, logger):
         config.num_input_classes = config.num_parentheses * 2 + 1
 
         trainerClass = DyckTrainer
+    elif config.dataset == "mqar":
+        train_ds = MQARDatasetIterator(
+            batch_size=config.train_batch_size,
+            num_pairs=config.train_num_pairs,
+            n_keys=config.n_keys,
+            n_values=config.n_values,
+            pad_num_pairs=config.max_num_pairs,
+            unique_keys=config.unique_keys,
+            all_queries_for_input=config.all_queries_for_input,
+            device=config.device,
+        )
+        eval_ds = MQARDatasetIterator(
+            batch_size=config.eval_batch_size,
+            num_pairs=config.eval_num_pairs,
+            n_keys=config.n_keys,
+            n_values=config.n_values,
+            pad_num_pairs=config.max_num_pairs,
+            unique_keys=config.unique_keys,
+            all_queries_for_input=config.all_queries_for_input,
+            device=config.device,
+        )
+        config.num_input_classes = max(config.n_keys, config.n_values + 1) + 1
+        config.output_size = config.n_values + 1
+        config.max_seq_len = config.max_num_pairs * 3
+
+        trainerClass = MQARTrainer 
     else:
         # add the configuration for each new dataset here
         raise RuntimeError(
@@ -135,9 +163,9 @@ def main():
     parser.add_argument(
         "--dataset",
         type=str,
-        choices=["bit_parity", "dyck", "MQAR"],
+        choices=["bit_parity", "dyck", "mqar"],
         default="bit_parity",
-        help="Choose dataset: 'bit_parity' (default), 'dyck', 'MQAR'.",
+        help="Choose dataset: 'bit_parity' (default), 'dyck', 'mqar'.",
     )
     args = parser.parse_args(sys.argv[2:])
     config = experiment_utils.update_config_given_args(config, args)

@@ -103,6 +103,15 @@ def load_config(name=None):
         c.num_parentheses = 4
         c.seq_len = 8
 
+        #MQAR specific
+        c.n_keys = 3
+        c.n_values = 6
+        c.train_num_pairs = "3,3"
+        c.eval_num_pairs = "3,3"
+        c.max_num_pairs = 3 
+        c.unique_keys = True
+        c.all_queries_for_input = False
+
         # Bit parity specific
         c.train_seq_len = "8,8"
         c.eval_seq_len = "8,8"
