@@ -97,7 +97,7 @@ def load_config(name=None):
         c.non_quasi = False
 
         # Dataset config
-        c.output_size = 2
+        c.output_size = 5
         c.num_input_classes = 2
 
         # Dyck specific
@@ -105,7 +105,15 @@ def load_config(name=None):
         c.num_parentheses = 4
         c.seq_len = 8
 
-        # Bit parity specific
+        #MQAR specific
+        c.n_keys = 2
+        c.n_values = 4
+        c.train_num_pairs = "3,3"
+        c.eval_num_pairs = "3,3"
+        c.max_num_pairs = 2 
+        c.unique_keys = False 
+        c.all_queries_for_input = False
+
         c.train_seq_len = "4,4"
         c.eval_seq_len = "4,4"
         c.max_seq_len = 4 
