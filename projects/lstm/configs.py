@@ -97,7 +97,7 @@ def load_config(name=None):
         c.non_quasi = False
 
         # Dataset config
-        c.output_size = 5
+        c.output_size = 7
         c.num_input_classes = 2
 
         # Dyck specific
@@ -106,12 +106,12 @@ def load_config(name=None):
         c.seq_len = 8
 
         #MQAR specific
-        c.n_keys = 2
-        c.n_values = 4
+        c.n_keys = 3
+        c.n_values = 6
         c.train_num_pairs = "3,3"
         c.eval_num_pairs = "3,3"
-        c.max_num_pairs = 2 
-        c.unique_keys = False 
+        c.max_num_pairs = 3 
+        c.unique_keys = True
         c.all_queries_for_input = False
 
         c.train_seq_len = "4,4"

@@ -34,7 +34,7 @@ class MQARTrainer:
         while step < self.max_steps:
             inputs, targets = next(self.train_loader)
 
-            #inputs, targets = inputs.to(self.device), targets.to(self.device)
+            inputs, targets = inputs.to(self.device), targets.to(self.device)
             logits, state = self.model(inputs, state)
             labels = torch.argmax(targets, dim = 1)
             loss = self.criterion(logits[:, -1], labels)  
@@ -72,7 +72,7 @@ class MQARTrainer:
         with torch.no_grad():
             for _ in range(10):
                 inputs, targets = next(self.eval_loader)
-                #inputs, targets = inputs.to(self.device), targets.to(self.device)
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
                 state = self._init_state()
 
                 logits, state = self.model(inputs, state)

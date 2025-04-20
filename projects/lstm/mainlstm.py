@@ -114,6 +114,7 @@ def run(config, logger):
             device=config.device,
         )
         config.num_input_classes = max(config.n_keys, config.n_values + 1) + 1
+        config.output_size = config.n_values + 1
 
         trainerClass = MQARTrainer 
     else:
