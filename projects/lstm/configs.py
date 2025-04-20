@@ -101,14 +101,14 @@ def load_config(name=None):
         c.num_input_classes = 2
 
         # Dyck specific
-        c.depth = 1
-        c.num_parentheses = 1
+        c.depth = 3
+        c.num_parentheses = 4
         c.seq_len = 8
 
         # Bit parity specific
-        c.train_seq_len = "16,16"
-        c.eval_seq_len = "16,16"
-        c.max_seq_len = 16
+        c.train_seq_len = "4,4"
+        c.eval_seq_len = "4,4"
+        c.max_seq_len = 4 
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

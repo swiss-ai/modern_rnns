@@ -61,6 +61,10 @@ class DyckDatasetIterator:
         not_matching_closed = True
 
         for paranthesis in sequence:
+            if not not_matching_closed:
+                labels.append(self.__one_hot_label(False))
+                continue
+
             if self.__is_opening_paranthesis(paranthesis):
                 stack.append(paranthesis)
                 labels.append(self.__one_hot_label(False))
@@ -92,12 +96,12 @@ class DyckDatasetIterator:
 
         start_shuffle_position = np.random.choice(valid_positions)
 
-        shuffled_sequence = sequence[start_shuffle_position + 1 :]
+        shuffled_sequence = sequence[start_shuffle_position + 1:]
         np.random.shuffle(shuffled_sequence)
         shuffled_sequence_labels = self.__compute_labels(shuffled_sequence)
 
-        sequence[start_shuffle_position + 1 :] = shuffled_sequence
-        labels[start_shuffle_position + 1 :] = shuffled_sequence_labels
+        sequence[start_shuffle_position + 1:] = shuffled_sequence
+        labels[start_shuffle_position + 1:] = shuffled_sequence_labels
 
         return sequence, labels
 
@@ -130,8 +134,7 @@ class DyckDatasetIterator:
         sequence, labels = self.__generate_sequence(length)
 
         if np.random.rand() <= 0.5:
-            pass
-            #sequence, labels = self.__shuffle_sample(sequence=sequence, labels=labels)
+            sequence, labels = self.__shuffle_sample(sequence=sequence, labels=labels)
 
         return sequence, labels
 
