@@ -29,8 +29,8 @@ def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment."""
     c = config
     c.exp_name = "{}LSTM{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
-        "" if c.non_quasi else "quasi",
-        "" if c.non_quasi else f"_bl{c.block_length}",
+        "quasi",
+        f"_bl{c.block_length}",
         c.dataset,
         c.seq_len,
         c.h_dim,
@@ -86,15 +86,13 @@ def load_config(name=None):
         name = "mini"
 
     # model
-    c.non_quasi = False
     if name == "mini":
         c.n_layers = 2
         c.h_dim = 4
         c.mlp_dim = 8
-        c.head_dim = 4  # change for q lstm
-        c.n_heads = 4  # change for q lstm
-        c.block_length = 8
-        c.non_quasi = False
+        c.head_dim = 4
+        c.n_heads = 4
+        c.block_length = 8 # keep it equal to seq len for faster convergence
 
         # Dataset config
         c.output_size = 7
@@ -110,13 +108,14 @@ def load_config(name=None):
         c.n_values = 6
         c.train_num_pairs = "3,3"
         c.eval_num_pairs = "3,3"
-        c.max_num_pairs = 3 
+        c.max_num_pairs = 3
         c.unique_keys = True
         c.all_queries_for_input = False
 
-        c.train_seq_len = "4,4"
-        c.eval_seq_len = "4,4"
-        c.max_seq_len = 4 
+        # Bit parity specific
+        c.train_seq_len = "8,8"
+        c.eval_seq_len = "8,8"
+        c.max_seq_len = 8
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

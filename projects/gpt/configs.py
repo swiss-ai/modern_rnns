@@ -85,7 +85,6 @@ def load_config(name=None):
         name = "mini"
 
     # model
-    c.non_quasi = False
     if name == "mini":
         c.n_layers = 2
         c.h_dim = 16

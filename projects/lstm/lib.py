@@ -251,12 +251,11 @@ class MLP(torch.nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, non_quasi, block_length, name):
+    def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, block_length, name):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
         self.seq_len = seq_len
-        self.non_quasi = non_quasi
 
         self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
 

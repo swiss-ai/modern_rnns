@@ -43,7 +43,6 @@ class Model(torch.nn.Module):
                     head_dim=c.head_dim,
                     n_heads=c.n_heads,
                     n_layers=c.n_layers,
-                    non_quasi=c.non_quasi,
                     block_length=c.block_length,
                     name=f"{self.name}/Block{i + 1}",
                 )
