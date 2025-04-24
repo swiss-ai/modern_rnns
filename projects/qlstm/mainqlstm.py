@@ -125,7 +125,7 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = QLSTMModel(config=config)
+    model = ModelQLSTM(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser

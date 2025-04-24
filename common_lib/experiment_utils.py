@@ -109,6 +109,7 @@ def setup_experiment(config):
     # create logger
     logger_obj = logger.Logger(config)
 
+    print("PROJECT PATH", config.project_path)
     # save the current python files as zip file in the log folder
     save_source_code(config.project_path, logger_obj)
 
