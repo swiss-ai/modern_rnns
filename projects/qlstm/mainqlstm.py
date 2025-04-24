@@ -17,11 +17,11 @@
 # Example calls:
 
 ## Single GPU:
-CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/lstm/main.py tiny --train_batch_size 16 --debug
+CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/qlstm/main.py tiny --train_batch_size 16 --debug
 
 ## Multi GPU:
 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --master_addr=server.example.com --master_port=12300 \
-    languini/projects/lstm/main.py tiny \
+    languini/projects/qlstm/main.py tiny \
     --train_batch_size 16 \
     --eval_every 1000 \
     --log_grads_every 1000 \
@@ -46,7 +46,7 @@ from common_lib.parallel_utils import mprint
 # from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
 import configs
-from basic_lstm_model import Model
+from modelqlstm import Model
 from datasets.mqar_dataset import MQARDatasetIterator
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer

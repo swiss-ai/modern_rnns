@@ -78,7 +78,7 @@ def load_config(name=None):
         # logging
         comment="",
         logger_type="wandb",  # can be 'tb', 'wandb' or 'all'
-        wandb_project_name="lstm",
+        wandb_project_name="gpt",
     )
     # default model
     if not name or name == "default":

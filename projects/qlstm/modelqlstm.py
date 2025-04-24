@@ -17,8 +17,8 @@ import math
 import torch
 from torch import nn
 
-from projects.lstm.lib import LayerNorm
-from projects.lstm.lib import Block
+from projects.qlstm.lib import LayerNorm
+from projects.qlstm.lib import Block
 
 
 class Model(torch.nn.Module):
