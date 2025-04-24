@@ -26,7 +26,7 @@ from projects.gpt.lib import LayerNorm
 from projects.gpt.lib import Block
 
 
-class Model(torch.nn.Module):
+class GPTModel(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
         # check_config(config, DEFAULT_CONFIG)

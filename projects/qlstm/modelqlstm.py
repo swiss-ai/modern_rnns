@@ -21,7 +21,7 @@ from projects.qlstm.lib import LayerNorm
 from projects.qlstm.lib import Block
 
 
-class Model(torch.nn.Module):
+class QLSTMModel(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
         self.c = c = config
