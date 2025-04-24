@@ -3,7 +3,7 @@ import torch.nn as nn
 import math
 
 
-class LSTMModel(nn.Module):
+class ModelLSTM(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.c = c = config

@@ -41,7 +41,7 @@ from common_lib import experiment_utils
 from common_lib.parallel_utils import mprint
 
 from datasets.mqar_dataset import MQARDatasetIterator
-from modelgpt import Model
+from modelgpt import ModelGPT
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
@@ -120,7 +120,7 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = Model(config=config)
+    model = ModelGPT(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser
