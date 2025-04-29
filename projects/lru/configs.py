@@ -28,7 +28,7 @@ config_names = [
 def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment."""
     c = config
-    c.exp_name = "{}LSTM{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
+    c.exp_name = "{}LRU{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
         "basic",
         "",
         c.dataset,
@@ -79,7 +79,7 @@ def load_config(name=None):
         # logging
         comment="",
         logger_type="wandb",  # can be 'tb', 'wandb' or 'all'
-        wandb_project_name="lstm",
+        wandb_project_name="lru",
     )
     # default model
     if not name or name == "default":

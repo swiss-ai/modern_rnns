@@ -56,9 +56,9 @@ def load_config(name=None):
         # # optimiser
         seed=41,
         # gradient_accumulation_steps = 1,    # number of batches before doing a gradient step
-        train_batch_size=8,  # make sure batch sizes are an integer multiple of the number of workers
-        eval_batch_size=8,
-        test_batch_size=8,
+        train_batch_size=32,  # make sure batch sizes are an integer multiple of the number of workers
+        eval_batch_size=32,
+        test_batch_size=32,
         # seq_len = 512,
         # max_eval_steps = 512,
         # max_train_steps = 500_000,          # total number of training steps
@@ -102,13 +102,13 @@ def load_config(name=None):
         c.num_parentheses = 4
         c.seq_len = 8
 
-        #MQAR specific
+        # MQAR specific
         c.n_keys = 3
         c.n_values = 6
         c.train_num_pairs = "4,4"
         c.eval_num_pairs = "4,4"
-        c.max_num_pairs = 4 
-        c.unique_keys = False 
+        c.max_num_pairs = 4
+        c.unique_keys = False
         c.all_queries_for_input = False
 
         # Bit parity specific
