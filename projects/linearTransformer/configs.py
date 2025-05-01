@@ -28,7 +28,7 @@ config_names = [
 def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment."""
     c = config
-    c.exp_name = "GPT{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
+    c.exp_name = "LinearTransformer{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
         "_flash" if c.use_flash else "",
         c.dataset,
         c.seq_len,
@@ -78,7 +78,7 @@ def load_config(name=None):
         # logging
         comment="",
         logger_type="wandb",  # can be 'tb', 'wandb' or 'all'
-        wandb_project_name="gpt",
+        wandb_project_name="linearTransformer",
     )
     # default model
     if not name or name == "default":
@@ -107,7 +107,7 @@ def load_config(name=None):
         c.n_values = 6
         c.train_num_pairs = "3,3"
         c.eval_num_pairs = "3,3"
-        c.max_num_pairs = 3 
+        c.max_num_pairs = 3
         c.unique_keys = True
         c.all_queries_for_input = False
 
