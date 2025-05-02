@@ -3,6 +3,7 @@ import torch
 from tqdm import tqdm
 
 from common_lib import parallel_utils
+from sklearn.metrics import precision_score
 
 
 class DyckTrainer:
@@ -81,11 +82,14 @@ class DyckTrainer:
         if parallel_utils.is_main_process():
             self.save_checkpoint(self.logger, step)
 
+
     def evaluate(self, step):
         self.model.eval()
         total_loss = 0.0
         total_correct = 0
         total_samples = 0
+        all_preds = []
+        all_labels = []
         state = self._init_state()
 
         with torch.no_grad():
@@ -103,12 +107,21 @@ class DyckTrainer:
                 total_correct += (preds == labels).sum().item()
                 total_samples += targets.size(0) * targets.size(1)
 
+                all_preds.extend(preds.view(-1).cpu().numpy())
+                all_labels.extend(labels.view(-1).cpu().numpy())
+
         avg_loss = total_loss / 10
         accuracy = total_correct / total_samples
-        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+        precision = precision_score(all_labels, all_preds, average='macro', zero_division=0)
+
+        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}, Precision: {precision:.4f}")
 
         if self.logger:
-            self.logger.log({"eval/loss": avg_loss, "eval/accuracy": accuracy}, step)
+            self.logger.log({
+                "eval/loss": avg_loss,
+                "eval/accuracy": accuracy,
+                "eval/precision": precision
+            }, step)
 
         self.model.train()
 

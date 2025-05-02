@@ -96,7 +96,7 @@ def load_config(name=None):
         c.num_input_classes = 2
 
         # Dyck specific
-        c.depth = 3
+        c.depth = 1
         c.num_parentheses = 4
         c.seq_len = 8
 
