@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Script to train models on the languini books dataset.
+"""Script to train models on the a diverse range of datasets.
 
 # Example calls:
 
@@ -37,16 +37,14 @@ import sys
 
 import torch
 
-# from languini.train_lib import lm_trainer
-# from languini.train_lib import lr_schedules
-# from languini.common_lib import parallel_utils
+
 from common_lib import experiment_utils
 from common_lib.parallel_utils import mprint
 
-# from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
 import configs
-from modellintransformer import Model
+from modelLinTransformer import Model
+
 from datasets.mqar_dataset import MQARDatasetIterator
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
@@ -115,6 +113,7 @@ def run(config, logger):
         )
         config.num_input_classes = max(config.n_keys, config.n_values + 1) + 1
         config.output_size = config.n_values + 1
+        config.max_seq_len = config.max_num_pairs * 3
 
         trainerClass = MQARTrainer 
     else:
@@ -129,7 +128,7 @@ def run(config, logger):
     model = model.to(config.device)
 
     ## Setup Optimiser
-    opt = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.95), eps=1e-08)
+    opt = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08)
 
     ## Setup Trainer
     trainer = trainerClass(
@@ -149,7 +148,7 @@ def run(config, logger):
 
 
 def main():
-    """Runs an experiment using an LSTM model."""
+    """Runs an experiment using a linear transformer model."""
     config_name = experiment_utils.parse_config_name(configs.config_names)
     mprint(f"Loading config: {config_name}")
 

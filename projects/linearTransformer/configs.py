@@ -28,9 +28,8 @@ config_names = [
 def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment."""
     c = config
-    c.exp_name = "{}LSTM{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
-        "quasi",
-        f"_bl{c.block_length}",
+    c.exp_name = "LinearTransformer{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
+        "_flash" if c.use_flash else "",
         c.dataset,
         c.seq_len,
         c.h_dim,
@@ -57,9 +56,9 @@ def load_config(name=None):
         # # optimiser
         seed=41,
         # gradient_accumulation_steps = 1,    # number of batches before doing a gradient step
-        train_batch_size=1,  # make sure batch sizes are an integer multiple of the number of workers
-        eval_batch_size=1,
-        test_batch_size=1,
+        train_batch_size=8,  # make sure batch sizes are an integer multiple of the number of workers
+        eval_batch_size=8,
+        test_batch_size=8,
         # seq_len = 512,
         # max_eval_steps = 512,
         # max_train_steps = 500_000,          # total number of training steps
@@ -79,7 +78,7 @@ def load_config(name=None):
         # logging
         comment="",
         logger_type="wandb",  # can be 'tb', 'wandb' or 'all'
-        wandb_project_name="linear-transformer",
+        wandb_project_name="linearTransformer",
     )
     # default model
     if not name or name == "default":
@@ -88,11 +87,11 @@ def load_config(name=None):
     # model
     if name == "mini":
         c.n_layers = 2
-        c.h_dim = 4
-        c.mlp_dim = 8
-        c.head_dim = 4
+        c.h_dim = 16
+        c.mlp_dim = 16
+        c.head_dim = 8
         c.n_heads = 4
-        c.block_length = 8 # keep it equal to seq len for faster convergence
+        c.use_flash = False
 
         # Dataset config
         c.output_size = 2
@@ -114,8 +113,8 @@ def load_config(name=None):
 
         # Bit parity specific
         c.train_seq_len = "8,8"
-        c.eval_seq_len = "32,32"
-        c.max_seq_len = 32
+        c.eval_seq_len = "16,16"
+        c.max_seq_len = 16
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 
