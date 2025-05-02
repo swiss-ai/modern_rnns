@@ -17,34 +17,39 @@ import math
 import torch
 from torch import nn
 
-from projects.linear-transformer.lib import LayerNorm
-from projects.linear-transformer.lib import Tra
+# from munch import Munch
+# from languini.train_lib.train_utils import check_config
+from common_lib.debug_utils import check
+# from languini.common_lib.debug_utils import log_stats_and_dist
+
+from projects.linearTransformer.lib import LayerNorm
+from projects.linearTransformer.lib import Block
 
 
 class Model(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
+        # check_config(config, DEFAULT_CONFIG)
         self.c = c = config
-        self.name = "linear-transformer"
+        self.name = "LinearTransformer"
 
         self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
 
-        # self.position_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
-        # torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
+        self.position_embedding = nn.Embedding(c.max_seq_len, c.h_dim)
+        torch.nn.init.normal_(self.position_embedding.weight, mean=0.0, std=0.02)
 
         self.layers = nn.ModuleList([])
         for i in range(c.n_layers):
             self.layers.append(
-                TransformerEncoderLayer(
-                    seq_len=c.max_seq_len,
+                Block(
                     h_dim=c.h_dim,
                     mlp_dim=c.mlp_dim,
                     head_dim=c.head_dim,
                     n_heads=c.n_heads,
                     n_layers=c.n_layers,
-                    block_length=c.block_length,
                     name=f"{self.name}/Block{i + 1}",
+                    use_flash=c.use_flash,
                 )
             )
 
@@ -54,34 +59,42 @@ class Model(torch.nn.Module):
         torch.nn.init.normal_(self.linear.weight, mean=0.0, std=0.02)
 
     def get_init_state(self, batch_size, device):
-        return [
-            (
-                torch.zeros(
-                    (batch_size, self.c.n_heads, self.c.head_dim), device=device
-                ),
-                torch.zeros(
-                    (batch_size, self.c.n_heads, self.c.head_dim), device=device
-                ),
-            )
-            for _ in range(self.c.n_layers)
-        ]
+        return None
 
     def forward(self, x, state, log=None):
         # x: [batch_size, seq_length]
+        bsz, seqlen = x.shape
+        c = self.c
+        # print("input",x.shape)
 
         # embedd input tokens
-        x = self.input_embedding(x) * math.sqrt(self.c.h_dim)
+        x = self.input_embedding(x) * math.sqrt(c.h_dim)
+        # print("embeddings",x.shape)
+
+        check(x, (bsz, seqlen, c.h_dim))
+
+        # add position embedding
+        pos_id = torch.arange(0, seqlen, dtype=torch.int64, device=c.device).unsqueeze(
+            0
+        )
+        # check(pos_id, (1, seqlen))
+        pos = self.position_embedding(pos_id)
+        check(pos, (1, seqlen, c.h_dim))
+        x = x + pos
 
         # forward
-        new_states = []
-        for idx, layer in enumerate(self.layers):
+        for layer in self.layers:
+            x = layer(x, log=log)
+            # check(x, (bsz, seqlen, c.h_dim))
 
-            x, new_state = layer(x, state[idx], log=log)
-
-            new_states.append(new_state)
+        # print("after layers", x.shape)
 
         # project to vocab
         x = self.ln_f(x, log=log)
-        logits = self.linear(x)
+        # print("before mean x", x.shape)
 
-        return logits, new_states
+        logits = self.linear(x)
+        # print("logits", x.shape)
+        # check(x, (bsz, c.vocab_size))
+
+        return logits, state
