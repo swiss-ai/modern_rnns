@@ -157,7 +157,7 @@ class DyckDatasetIterator:
             batch_sequences, (0, self.pad_sequence_length - sequence_length), value=self.num_parentheses * 2 + 1
         )
         batch_labels = torch.nn.functional.pad(
-            batch_labels, (0, self.pad_sequence_length - sequence_length), value=1
+            batch_labels, (0, 0, 0, self.pad_sequence_length - sequence_length), value=1
         )
         return batch_sequences.to(self.device), batch_labels.to(self.device)
 

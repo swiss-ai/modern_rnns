@@ -89,7 +89,7 @@ def run(config, logger):
             depth=config.depth,
             num_parentheses=config.num_parentheses,
         )
-        config.num_input_classes = config.num_parentheses * 2 + 1
+        config.num_input_classes = config.num_parentheses * 2 + 2
 
         trainerClass = DyckTrainer
     elif config.dataset == "mqar":
