@@ -114,8 +114,8 @@ def load_config(name=None):
 
         # Bit parity specific
         c.train_seq_len = "8,8"
-        c.eval_seq_len = "8,8"
-        c.max_seq_len = 8
+        c.eval_seq_len = "32,32"
+        c.max_seq_len = 32
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

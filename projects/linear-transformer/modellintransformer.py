@@ -17,15 +17,15 @@ import math
 import torch
 from torch import nn
 
-from projects.qlstm.lib import LayerNorm
-from projects.qlstm.lib import Block
+from projects.linear-transformer.lib import LayerNorm
+from projects.linear-transformer.lib import Tra
 
 
 class Model(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
         self.c = c = config
-        self.name = "LSTM"
+        self.name = "linear-transformer"
 
         self.input_embedding = nn.Embedding(c.num_input_classes, c.h_dim)
         torch.nn.init.normal_(self.input_embedding.weight, mean=0.0, std=0.02)
@@ -36,7 +36,7 @@ class Model(torch.nn.Module):
         self.layers = nn.ModuleList([])
         for i in range(c.n_layers):
             self.layers.append(
-                Block(
+                TransformerEncoderLayer(
                     seq_len=c.max_seq_len,
                     h_dim=c.h_dim,
                     mlp_dim=c.mlp_dim,
