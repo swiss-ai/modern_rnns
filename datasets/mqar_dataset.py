@@ -45,8 +45,8 @@ class MQARDatasetIterator:
                 "length of the sequence"
             )
         
-        self.key_indexes = list(range(1, self.n_keys))
-        self.value_indexes = list(range(1, self.n_values))
+        self.key_indexes = list(range(1, self.n_keys + 1))
+        self.value_indexes = list(range(1, self.n_values + 1))
 
     def _parse_num_pairs(self, num_pairs):
         values = tuple(map(int, num_pairs.split(",")))
@@ -91,9 +91,10 @@ class MQARDatasetIterator:
             replace=True
         )
 
-        sequence = []
-        for key, value in zip(keys, values):
-            sequence.extend([key, self.pipe_token, value])
+        sequence = np.empty(num_pairs * 3, dtype=np.int32)  # or appropriate dtype
+        sequence[::3] = keys
+        sequence[1::3] = self.pipe_token
+        sequence[2::3] = values
 
         sequence_tensor = torch.tensor(sequence, dtype = torch.long).to(self.device)
         return sequence_tensor
@@ -131,7 +132,7 @@ class MQARDatasetIterator:
         batch_sequences = torch.stack(batch_sequences)
         batch_targets = torch.stack(batch_targets)
         batch_sequences = torch.nn.functional.pad(
-            batch_sequences, (0, (self.pad_num_pairs - num_pairs) * 2 + 1), value = 0
+            batch_sequences, (0, (self.pad_num_pairs - num_pairs) * 2), value = 0
         )
         return batch_sequences, batch_targets
 
