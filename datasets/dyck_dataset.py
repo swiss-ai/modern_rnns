@@ -133,8 +133,8 @@ class DyckDatasetIterator:
     def __generate_sample(self, length):
         sequence, labels = self.__generate_sequence(length)
 
-        if np.random.rand() <= 0.5:
-            sequence, labels = self.__shuffle_sample(sequence=sequence, labels=labels)
+        #if np.random.rand() <= 0.5:
+        #    sequence, labels = self.__shuffle_sample(sequence=sequence, labels=labels)
 
         return sequence, labels
 
