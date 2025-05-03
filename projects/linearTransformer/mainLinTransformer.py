@@ -43,7 +43,7 @@ from common_lib.parallel_utils import mprint
 
 
 import configs
-from modelLinTransformer import Model
+from modelLinTransformer import ModelLinTransformer
 
 from datasets.mqar_dataset import MQARDatasetIterator
 from trainers.bit_parity_trainer import BitParityTrainer
@@ -124,7 +124,7 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = Model(config=config)
+    model = ModelLinTransformer(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser

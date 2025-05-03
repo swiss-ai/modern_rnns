@@ -26,7 +26,7 @@ from projects.linearTransformer.lib import LayerNorm
 from projects.linearTransformer.lib import Block
 
 
-class Model(torch.nn.Module):
+class ModelLinTransformer(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
         # check_config(config, DEFAULT_CONFIG)
