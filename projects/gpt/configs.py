@@ -104,12 +104,12 @@ def load_config(name=None):
 
         #MQAR specific
         c.n_keys = 3
-        c.n_values = 6
-        c.train_num_pairs = "4,4"
-        c.eval_num_pairs = "4,4"
+        c.n_values = 3
+        c.train_num_pairs = "3,3"
+        c.eval_num_pairs = "3,3"
         c.max_num_pairs = 4 
-        c.unique_keys = False 
-        c.unique_values = False 
+        c.unique_keys = True 
+        c.unique_values = True 
         c.all_queries_for_input = False
 
         # Bit parity specific

@@ -1,20 +1,16 @@
 import torch
-import numpy as np
 
 
-class DyckDatasetIterator:
-    def __init__(
-        self, batch_size, sequence_length, num_parentheses, pad_sequence_length, depth, device="cpu"
-    ):
+class BitParityDatasetIterator:
+    def __init__(self, batch_size, sequence_length, pad_sequence_length, device="cpu"):
         """
-        A dataset iterator that generates synthetic Dyck langauge sequences and
-        their correctness labels.
+        A dataset iterator that generates synthetic binary sequences and their parity labels.
 
         Args:
             batch_size (int): Number of sequences per batch.
-            sequence_length (int): Length of each Dyck sequence.
-            num_parentheses (int): The number of possible distinct parentheses.
-            depth (int): The maximum depth of opened parentheses.
+            sequence_length (string): String concatenating the min and max lengths of the sequence.
+            pad_sequence_length (int): Maximum possible length of the binary sequence.
+                It pads all sequences to this length.
             device (str): Device to store the tensors ('cpu' or 'cuda').
         """
         self.batch_size = batch_size
@@ -22,8 +18,11 @@ class DyckDatasetIterator:
             sequence_length
         )
         self.pad_sequence_length = pad_sequence_length
-        self.num_parentheses = num_parentheses
-        self.depth = depth
+        if self.pad_sequence_length < self.max_seq_len:
+            raise ValueError(
+                f"The total padded sequence length [{self.pad_sequence_length}] "
+                f"must be greater than or equal to the max sequence length [{self.max_seq_len}]."
+            )
         self.device = device
 
     def _parse_sequence_length(self, sequence_length):
@@ -45,127 +44,44 @@ class DyckDatasetIterator:
     def __iter__(self):
         return self
 
-    def __is_opening_paranthesis(self, paranthesis):
-        return paranthesis < self.num_parentheses
-
-    def __get_closing_paranthesis(self, paranthesis):
-        return paranthesis + self.num_parentheses
-
-    def __one_hot_label(self, valid):
-        return [0.0, 1.0] if valid else [1.0, 0.0]
-
-    def __compute_labels(self, sequence):
-        # Computes the correctness of
-        labels = []
-        stack = []
-        not_matching_closed = True
-
-        for paranthesis in sequence:
-            if not not_matching_closed:
-                labels.append(self.__one_hot_label(False))
-                continue
-
-            if self.__is_opening_paranthesis(paranthesis):
-                stack.append(paranthesis)
-                labels.append(self.__one_hot_label(False))
-                continue
-
-            if len(stack) == 0:
-                not_matching_closed = False
-                labels.append(self.__one_hot_label(False))
-                continue
-
-            if self.__get_closing_paranthesis(stack[-1]) == paranthesis:
-                stack.pop()
-                labels.append(
-                    self.__one_hot_label(len(stack) == 0 and not_matching_closed)
-                )
-                continue
-
-            not_matching_closed = False
-            labels.append(self.__one_hot_label(False))
-
-        return labels
-
-    def __shuffle_sample(self, sequence, labels):
-        valid_positions = [i for i, x in enumerate(labels[:-1]) if x == [0.0, 1.0]]
-        if len(valid_positions) == 0:
-            np.random.shuffle(sequence)
-            shuffled_sequence_labels = self.__compute_labels(sequence)
-            return sequence, shuffled_sequence_labels
-
-        start_shuffle_position = np.random.choice(valid_positions)
-
-        shuffled_sequence = sequence[start_shuffle_position + 1:]
-        np.random.shuffle(shuffled_sequence)
-        shuffled_sequence_labels = self.__compute_labels(shuffled_sequence)
-
-        sequence[start_shuffle_position + 1:] = shuffled_sequence
-        labels[start_shuffle_position + 1:] = shuffled_sequence_labels
-
-        return sequence, labels
-
-    def __generate_sequence(self, length):
-        sequence = []
-        stack = []
-        labels = []
-
-        for _ in range(length):
-            if length - len(sequence) == len(stack):
-                while len(stack):
-                    sequence.append(stack.pop())
-                    labels.append(self.__one_hot_label(len(stack) == 0))
-                break
-
-            if len(stack) == self.depth or (len(stack) and np.random.rand() <= 0.5):
-                sequence.append(stack.pop())
-                labels.append(self.__one_hot_label(len(stack) == 0))
-                continue
-
-            open_paranthesis = np.random.randint(self.num_parentheses)
-            sequence.append(open_paranthesis)
-            stack.append(self.__get_closing_paranthesis(open_paranthesis))
-            labels.append(self.__one_hot_label(False))
-
-        #print(sequence, labels)
-        return sequence, labels
-
-    def __generate_sample(self, length):
-        sequence, labels = self.__generate_sequence(length)
-
-        if np.random.rand() <= 0.5:
-            sequence, labels = self.__shuffle_sample(sequence=sequence, labels=labels)
-
-        return sequence, labels
-
     def __next__(self):
-        batch_sequences = []
-        batch_labels = []
-        if self.min_seq_len // 2 == (self.max_seq_len + 1) // 2:
-            sequence_length = (self.min_seq_len // 2) * 2
-        else:
-            sequence_length = np.random.randint(self.min_seq_len // 2, (self.max_seq_len + 1) // 2) * 2
-
-        for _ in range(self.batch_size):
-            sequence, labels = self.__generate_sample(sequence_length)
-            batch_sequences.append(sequence)
-            batch_labels.append(labels)
-
-        batch_sequences = torch.tensor(batch_sequences)
-        batch_labels = torch.tensor(batch_labels)
-        batch_sequences = torch.nn.functional.pad(
-            batch_sequences, (0, self.pad_sequence_length - sequence_length), value=self.num_parentheses * 2 + 1
+        """Generates a new batch of synthetic binary sequences and their parity labels."""
+        # Generate random binary sequences
+        sequence_length = torch.randint(
+            self.min_seq_len, self.max_seq_len + 1, (1,)
+        ).item()
+        batch_x = torch.randint(
+            0, 2, (self.batch_size, sequence_length), dtype=torch.int64
         )
-        batch_labels = torch.nn.functional.pad(
-            batch_labels, (0, self.pad_sequence_length - sequence_length), value=1
+        batch_x = torch.nn.functional.pad(
+            batch_x, (0, self.pad_sequence_length - sequence_length), value=0
         )
-        return batch_sequences.to(self.device), batch_labels.to(self.device)
+
+        # Compute parity (sum of 1s mod 2) and convert to one-hot
+        # parity_labels = batch_x.sum(dim=1) % 2
+        # batch_y = torch.nn.functional.one_hot(parity_labels, num_classes=2).to(
+        #     dtype=torch.int64
+        # )
+
+        # holds partial sums (1 if partial sum is even, else 0)
+        # parity_labels = [batch_x[:, :i + 1].sum(dim=1) % 2 == 0 for i in range(self.sequence_length)]
+        # batch_y = torch.stack(parity_labels, dim=1).int()
+
+        # Compute parity labels without using cumsum
+        parity_labels = [
+            batch_x[:, : i + 1].sum(dim=1) % 2 == 0
+            for i in range(self.pad_sequence_length)
+        ]
+        batch_y = torch.stack(parity_labels, dim=1).to(dtype=torch.float)
+        batch_y = torch.stack([1 - batch_y, batch_y], dim=2)
+
+        return batch_x.to(self.device), batch_y.to(self.device)
 
 
 # Example usage
 if __name__ == "__main__":
-    dataset = DyckDatasetIterator(
-        batch_size=2, sequence_length=8, num_parentheses=3, depth=4, device="cpu"
+    dataset = BitParityDatasetIterator(
+        batch_size=8, sequence_length="10,10", pad_sequence_length=10, device="cpu"
     )
     for _ in range(3):  # Generate 3 batches
         x, y = next(dataset)
