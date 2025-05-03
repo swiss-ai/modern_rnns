@@ -94,6 +94,8 @@ def run(config, logger):
             n_values=config.n_values,
             pad_num_pairs=config.max_num_pairs,
             unique_keys=config.unique_keys,
+            unique_keys=config.unique_keys,
+            unique_values=config.unique_values,
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
         )
@@ -104,6 +106,7 @@ def run(config, logger):
             n_values=config.n_values,
             pad_num_pairs=config.max_num_pairs,
             unique_keys=config.unique_keys,
+            unique_values=config.unique_values,
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
         )

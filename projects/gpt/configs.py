@@ -109,6 +109,7 @@ def load_config(name=None):
         c.eval_num_pairs = "4,4"
         c.max_num_pairs = 4 
         c.unique_keys = False 
+        c.unique_values = False 
         c.all_queries_for_input = False
 
         # Bit parity specific

@@ -3,11 +3,12 @@ import numpy as np
 from typing import Tuple, Dict
 
 class MQARDatasetIterator:
-    def __init__(self, batch_size: int, num_pairs: int = 500, 
+    def __init__(self, batch_size: int, num_pairs: str = 500, 
                 n_keys: int = 1000, 
                 n_values: int = 1000, 
                 pad_num_pairs: int = 500,
                 unique_keys: bool = True, 
+                unique_values: bool = True, 
                 all_queries_for_input = False,
                 device: str ="cpu"):
         """
@@ -34,6 +35,7 @@ class MQARDatasetIterator:
         self.n_values = n_values
         self.pad_num_pairs = pad_num_pairs
         self.unique_keys = unique_keys
+        self.unique_values = unique_values
         self.all_queries_for_input = all_queries_for_input
         self.device = device
 
@@ -42,6 +44,11 @@ class MQARDatasetIterator:
         if self.unique_keys:
             assert n_keys >= self.min_num_pairs, (
                 "The number of different keys is smaller than the minimum "
+                "length of the sequence"
+            )
+        if self.unique_values:
+            assert n_values >= self.min_num_pairs, (
+                "The number of different values is smaller than the minimum "
                 "length of the sequence"
             )
         
@@ -88,7 +95,7 @@ class MQARDatasetIterator:
         values = np.random.choice(
             self.value_indexes,
             size=num_pairs,
-            replace=True
+            replace= not self.unique_values
         )
 
         sequence = []
