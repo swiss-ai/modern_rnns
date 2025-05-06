@@ -5,13 +5,13 @@ import torch.nn.functional as F
 
 # Keep LRU class as is (from the previous corrected version)
 class LRU(nn.Module):
-    def __init__(self, d_hidden, d_model, r_min=0.0, r_max=1.0, max_phase=6.28):
+    def __init__(self, d_hidden, d_model, r_min=0.9, r_max=0.99, max_phase=6.28):
         super().__init__()
         self.d_hidden = d_hidden
         self.d_model = d_model # This is the feature dimension of the input/output
         self.r_min = r_min  # Initialize here
         self.r_max = r_max
-        self.max_phase = max_phase
+        self.max_phase = math.pi / 50
 
         if r_max > 1.0:
              pass
@@ -19,6 +19,7 @@ class LRU(nn.Module):
         # Parameters
         self.nu_log = nn.Parameter(self.nu_init((d_hidden,)))
         self.theta_log = nn.Parameter(self.theta_init((d_hidden,)))
+        self.gamma_log = nn.Parameter(self.gamma_log_init(self.nu_log, self.theta_log))
 
         self.B_re = nn.Parameter(
             self.matrix_init((d_hidden, d_model), normalization=math.sqrt(2 * d_model))
@@ -46,9 +47,8 @@ class LRU(nn.Module):
         return nu
 
     def theta_init(self, shape):
-        u = torch.rand(shape)
         u = torch.rand(shape) * (1 - 1e-5) + 1e-5
-        return torch.log(self.max_phase * u)
+        return torch.log(self.max_phase * u)  # small phase
 
     def gamma_log_init(self, nu, theta):
         gamma_log = 0.5 * torch.log(1 - torch.exp(-2 * torch.exp(nu)) + 1e-5)
@@ -69,7 +69,7 @@ class LRU(nn.Module):
         diag_lambda = torch.exp(-nu + 1j * theta) # [d_hidden]
 
         gamma_log = self.gamma_log_init(self.nu_log, self.theta_log) # [d_hidden]
-
+        
         B_norm = (self.B_re + 1j * self.B_im) * torch.exp(gamma_log.unsqueeze(-1)) # [d_hidden, d_model]
 
         Bu_elements = torch.einsum("hd,btd->bth", B_norm, inputs_c) # [batch_size, seq_len, d_hidden]

@@ -1,0 +1,112 @@
+[I 2025-05-06 18:14:27.504 ServerApp] jupyter_lsp | extension was successfully linked.
+[I 2025-05-06 18:14:27.510 ServerApp] jupyter_server_terminals | extension was successfully linked.
+[I 2025-05-06 18:14:27.518 ServerApp] jupyterlab | extension was successfully linked.
+[I 2025-05-06 18:14:27.525 ServerApp] notebook | extension was successfully linked.
+[I 2025-05-06 18:14:28.066 ServerApp] notebook_shim | extension was successfully linked.
+[I 2025-05-06 18:14:28.089 ServerApp] notebook_shim | extension was successfully loaded.
+[I 2025-05-06 18:14:28.092 ServerApp] jupyter_lsp | extension was successfully loaded.
+[I 2025-05-06 18:14:28.093 ServerApp] jupyter_server_terminals | extension was successfully loaded.
+[I 2025-05-06 18:14:28.097 LabApp] JupyterLab extension loaded from /home/vzarzu/miniconda3/envs/cil/lib/python3.10/site-packages/jupyterlab
+[I 2025-05-06 18:14:28.097 LabApp] JupyterLab application directory is /home/vzarzu/miniconda3/envs/cil/share/jupyter/lab
+[I 2025-05-06 18:14:28.098 LabApp] Extension Manager is 'pypi'.
+[I 2025-05-06 18:14:28.171 ServerApp] jupyterlab | extension was successfully loaded.
+[I 2025-05-06 18:14:28.177 ServerApp] notebook | extension was successfully loaded.
+[I 2025-05-06 18:14:28.177 ServerApp] Serving notebooks from local directory: /home/vzarzu/modern_rnns
+[I 2025-05-06 18:14:28.178 ServerApp] Jupyter Server 2.15.0 is running at:
+[I 2025-05-06 18:14:28.178 ServerApp] http://localhost:8585/lab?token=1bb8fe04113b4cd21affefa56ba29df9c7e8b7bc61f6550c
+[I 2025-05-06 18:14:28.178 ServerApp]     http://127.0.0.1:8585/lab?token=1bb8fe04113b4cd21affefa56ba29df9c7e8b7bc61f6550c
+[I 2025-05-06 18:14:28.178 ServerApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[C 2025-05-06 18:14:28.284 ServerApp] 
+    
+    To access the server, open this file in a browser:
+        file:///home/vzarzu/.local/share/jupyter/runtime/jpserver-2870411-open.html
+    Or copy and paste one of these URLs:
+        http://localhost:8585/lab?token=1bb8fe04113b4cd21affefa56ba29df9c7e8b7bc61f6550c
+        http://127.0.0.1:8585/lab?token=1bb8fe04113b4cd21affefa56ba29df9c7e8b7bc61f6550c
+[I 2025-05-06 18:14:28.316 ServerApp] Skipped non-installed server(s): bash-language-server, dockerfile-language-server-nodejs, javascript-typescript-langserver, jedi-language-server, julia-language-server, pyright, python-language-server, python-lsp-server, r-languageserver, sql-language-server, texlab, typescript-language-server, unified-language-server, vscode-css-languageserver-bin, vscode-html-languageserver-bin, vscode-json-languageserver-bin, yaml-language-server
+[W 2025-05-06 18:14:35.591 LabApp] Could not determine jupyterlab build status without nodejs
+[W 2025-05-06 18:14:35.943 ServerApp] 404 GET /api/contents/modern_rnns?content=0&hash=0&1746548075744 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.63ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:35.943 ServerApp] 404 GET /api/contents/modern_rnns?content=0&hash=0&1746548075744 (127.0.0.1): No such file or directory: modern_rnns
+[W 2025-05-06 18:14:35.949 ServerApp] 404 GET /api/contents/modern_rnns/experiment.ipynb?content=0&hash=0&1746548075744 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 3.36ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:35.949 ServerApp] 404 GET /api/contents/modern_rnns/experiment.ipynb?content=0&hash=0&1746548075744 (127.0.0.1): No such file or directory: modern_rnns/experiment.ipynb
+[W 2025-05-06 18:14:35.951 ServerApp] 404 GET /api/contents/modern_rnns/bit_parity_dataset.py?content=0&hash=0&1746548075744 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 5.03ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:35.951 ServerApp] 404 GET /api/contents/modern_rnns/bit_parity_dataset.py?content=0&hash=0&1746548075744 (127.0.0.1): No such file or directory: modern_rnns/bit_parity_dataset.py
+[W 2025-05-06 18:14:35.956 ServerApp] 404 GET /api/contents/modern_rnns/trainers?content=0&hash=0&1746548075744 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 4.11ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:35.956 ServerApp] 404 GET /api/contents/modern_rnns/trainers?content=0&hash=0&1746548075744 (127.0.0.1): No such file or directory: modern_rnns/trainers
+[W 2025-05-06 18:14:35.959 ServerApp] 404 GET /api/contents/modern_rnns/trainers/dyck_trainer.py?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 5.91ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:35.959 ServerApp] 404 GET /api/contents/modern_rnns/trainers/dyck_trainer.py?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: modern_rnns/trainers/dyck_trainer.py
+[W 2025-05-06 18:14:35.961 ServerApp] 404 GET /api/contents/modern_rnns/dyck_dataset.py?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 7.59ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:35.961 ServerApp] 404 GET /api/contents/modern_rnns/dyck_dataset.py?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: modern_rnns/dyck_dataset.py
+[W 2025-05-06 18:14:36.003 ServerApp] 404 GET /api/contents/CIL_project/data?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.61ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.004 ServerApp] 404 GET /api/contents/CIL_project/data?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/data
+[W 2025-05-06 18:14:36.009 ServerApp] 404 GET /api/contents/CIL_project/data/val_split.csv?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.71ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.009 ServerApp] 404 GET /api/contents/CIL_project/data/val_split.csv?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/data/val_split.csv
+[W 2025-05-06 18:14:36.013 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.71ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.013 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm
+[W 2025-05-06 18:14:36.017 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.err?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.82ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.018 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.err?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm/22270_0_log.err
+[W 2025-05-06 18:14:36.022 ServerApp] 404 GET /api/contents/modern_rnns/datasets/dyck_dataset.py?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 3.34ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.023 ServerApp] 404 GET /api/contents/modern_rnns/datasets/dyck_dataset.py?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: modern_rnns/datasets/dyck_dataset.py
+[W 2025-05-06 18:14:36.025 ServerApp] 404 GET /api/contents/modern_rnns/datasets/bit_parity_dataset.py?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 5.12ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.025 ServerApp] 404 GET /api/contents/modern_rnns/datasets/bit_parity_dataset.py?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: modern_rnns/datasets/bit_parity_dataset.py
+[W 2025-05-06 18:14:36.066 ServerApp] 404 GET /api/contents/CIL_project/notebooks/experiments.ipynb?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.68ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.066 ServerApp] 404 GET /api/contents/CIL_project/notebooks/experiments.ipynb?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/notebooks/experiments.ipynb
+[W 2025-05-06 18:14:36.070 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22184_0_log.out?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.81ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.070 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22184_0_log.out?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm/22184_0_log.out
+[W 2025-05-06 18:14:36.074 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22190_0_log.out?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.80ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.074 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22190_0_log.out?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm/22190_0_log.out
+[W 2025-05-06 18:14:36.078 ServerApp] 404 GET /api/contents/CIL_project/data/rephrased_val.csv?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.59ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.078 ServerApp] 404 GET /api/contents/CIL_project/data/rephrased_val.csv?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/data/rephrased_val.csv
+[W 2025-05-06 18:14:36.084 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.err?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.92ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.085 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.err?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm/22270_0_log.err
+[W 2025-05-06 18:14:36.089 ServerApp] 404 GET /api/contents/CIL_project/logs/slurm/22266_0_log.err?content=0&hash=0&1746548075745 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.70ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.089 ServerApp] 404 GET /api/contents/CIL_project/logs/slurm/22266_0_log.err?content=0&hash=0&1746548075745 (127.0.0.1): No such file or directory: CIL_project/logs/slurm/22266_0_log.err
+[W 2025-05-06 18:14:36.128 ServerApp] 404 GET /api/contents/CIL_project/data/val_split.csv?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.72ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.129 ServerApp] 404 GET /api/contents/CIL_project/data/val_split.csv?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: CIL_project/data/val_split.csv
+[W 2025-05-06 18:14:36.132 ServerApp] 404 GET /api/contents/CIL_project/experiments_rephrases.ipynb?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.52ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.133 ServerApp] 404 GET /api/contents/CIL_project/experiments_rephrases.ipynb?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: CIL_project/experiments_rephrases.ipynb
+[W 2025-05-06 18:14:36.136 ServerApp] 404 GET /api/contents/modern_rnns/experiment.ipynb?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.49ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.137 ServerApp] 404 GET /api/contents/modern_rnns/experiment.ipynb?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: modern_rnns/experiment.ipynb
+[W 2025-05-06 18:14:36.140 ServerApp] 404 GET /api/contents/CIL_project/logs/slurm/22266_submission.sh?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.71ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.141 ServerApp] 404 GET /api/contents/CIL_project/logs/slurm/22266_submission.sh?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: CIL_project/logs/slurm/22266_submission.sh
+[W 2025-05-06 18:14:36.147 ServerApp] 404 GET /api/contents/CIL_project/logs/slurm/22266_0_log.out?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.80ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.147 ServerApp] 404 GET /api/contents/CIL_project/logs/slurm/22266_0_log.out?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: CIL_project/logs/slurm/22266_0_log.out
+[W 2025-05-06 18:14:36.151 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.err?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.83ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.151 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.err?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm/22270_0_log.err
+[W 2025-05-06 18:14:36.191 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.out?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.94ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.191 ServerApp] 404 GET /api/contents/CIL_project/notebooks/logs/slurm/22270_0_log.out?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: CIL_project/notebooks/logs/slurm/22270_0_log.out
+[W 2025-05-06 18:14:36.195 ServerApp] 404 GET /api/contents/modern_rnns/trainers/dyck_trainer.py?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.60ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.195 ServerApp] 404 GET /api/contents/modern_rnns/trainers/dyck_trainer.py?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: modern_rnns/trainers/dyck_trainer.py
+[W 2025-05-06 18:14:36.199 ServerApp] 404 GET /api/contents/modern_rnns/dyck_dataset.py?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.51ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.199 ServerApp] 404 GET /api/contents/modern_rnns/dyck_dataset.py?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: modern_rnns/dyck_dataset.py
+[W 2025-05-06 18:14:36.203 ServerApp] 404 GET /api/contents/modern_rnns/bit_parity_dataset.py?content=0&hash=0&1746548075746 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.46ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:36.203 ServerApp] 404 GET /api/contents/modern_rnns/bit_parity_dataset.py?content=0&hash=0&1746548075746 (127.0.0.1): No such file or directory: modern_rnns/bit_parity_dataset.py
+[W 2025-05-06 18:14:37.386 ServerApp] 404 GET /api/contents/modern_rnns?1746548077185 (03530136254543ac8627071ff8c3f7e9@127.0.0.1) 2.48ms referer=http://localhost:8585/lab
+[W 2025-05-06 18:14:37.386 ServerApp] 404 GET /api/contents/modern_rnns?1746548077185 (127.0.0.1): No such file or directory: modern_rnns
+[W 2025-05-06 18:14:40.073 ServerApp] Notebook experiment.ipynb is not trusted
+[I 2025-05-06 18:14:40.540 ServerApp] Kernel started: d0a46088-4a43-442b-9aba-15349e87d486
+[I 2025-05-06 18:14:42.949 ServerApp] Connecting to kernel d0a46088-4a43-442b-9aba-15349e87d486.
+[I 2025-05-06 18:14:42.953 ServerApp] Connecting to kernel d0a46088-4a43-442b-9aba-15349e87d486.
+[I 2025-05-06 18:14:43.090 ServerApp] Connecting to kernel d0a46088-4a43-442b-9aba-15349e87d486.
+[I 2025-05-06 18:16:40.363 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:18:40.609 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:28:40.857 ServerApp] Saving file at /experiment.ipynb
+[W 2025-05-06 18:29:32.353 ServerApp] delete /logs/slurm/23200_0_log.err
+[W 2025-05-06 18:29:32.373 ServerApp] delete /logs/slurm/23200_0_log.out
+[W 2025-05-06 18:29:32.383 ServerApp] delete /logs/slurm/23200_submission.sh
+[W 2025-05-06 18:29:32.398 ServerApp] delete /logs/slurm/23200_submitted.pkl
+[W 2025-05-06 18:29:32.413 ServerApp] delete /logs/slurm/23201_submission.sh
+[W 2025-05-06 18:29:32.427 ServerApp] delete /logs/slurm/23201_submitted.pkl
+[W 2025-05-06 18:29:32.441 ServerApp] delete /logs/slurm/23202_submission.sh
+[W 2025-05-06 18:29:32.456 ServerApp] delete /logs/slurm/23202_submitted.pkl
+[I 2025-05-06 18:30:41.149 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:43:59.709 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:46:00.618 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:47:28.710 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:49:43.039 ServerApp] Saving file at /projects/lru/lib.py
+[I 2025-05-06 18:50:14.111 ServerApp] Saving file at /projects/lru/lib.py
+[I 2025-05-06 18:51:29.733 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 18:56:14.385 ServerApp] Saving file at /projects/lru/lib.py
+[I 2025-05-06 18:57:07.455 ServerApp] Saving file at /projects/lru/lib.py
+[I 2025-05-06 18:57:31.625 ServerApp] Saving file at /experiment.ipynb
+[I 2025-05-06 19:01:31.921 ServerApp] Saving file at /experiment.ipynb
