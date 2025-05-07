@@ -29,14 +29,14 @@ def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment."""
     c = config
     c.exp_name = "{}LSTM{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
-        "basic",
-        "",
+        "lstm",
+        f"_bl{c.block_length}",
         c.dataset,
         c.seq_len,
         c.h_dim,
         c.mlp_dim,
-        0,
-        0,
+        c.n_heads,
+        c.head_dim,
         c.n_layers,
         c.seed,
         f"_{c.comment}" if c.comment else "",
@@ -79,7 +79,7 @@ def load_config(name=None):
         # logging
         comment="",
         logger_type="wandb",  # can be 'tb', 'wandb' or 'all'
-        wandb_project_name="lstm",
+        wandb_project_name="decoder-lstm",
     )
     # default model
     if not name or name == "default":
@@ -90,6 +90,9 @@ def load_config(name=None):
         c.n_layers = 2
         c.h_dim = 4
         c.mlp_dim = 8
+        c.head_dim = 4
+        c.n_heads = 4
+        c.block_length = 8 # keep it equal to seq len for faster convergence
 
         # Dataset config
         c.output_size = 2

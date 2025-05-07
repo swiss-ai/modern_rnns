@@ -17,7 +17,7 @@
 # Example calls:
 
 ## Single GPU:
-CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/lstm/main.py tiny --train_batch_size 16 --debug
+CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/qlstm/main.py tiny --train_batch_size 16 --debug
 
 ## Multi GPU:
 CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --master_addr=server.example.com --master_port=12300 \
@@ -46,7 +46,7 @@ from common_lib.parallel_utils import mprint
 # from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
 import configs
-from basic_lstm_model import Model
+from modellstm import Model
 from datasets.mqar_dataset import MQARDatasetIterator
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
@@ -149,7 +149,7 @@ def run(config, logger):
 
 
 def main():
-    """Runs an experiment using an LSTM model."""
+    """Runs an experiment using an decoder LSTM model."""
     config_name = experiment_utils.parse_config_name(configs.config_names)
     mprint(f"Loading config: {config_name}")
 
