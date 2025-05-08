@@ -13,7 +13,7 @@ class BitParityTrainer:
         eval_loader,
         optimizer,
         device,
-        max_steps=50000,
+        max_steps=40000,
         eval_every=1000,
         logger=None,
     ):

@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from projects.lru.lib import StackedEncoderModel, LRU
 
 # Modified LRUModel to output logits per time step when pooling="none"
-class LRUModel(nn.Module):
+class ModelLRU(nn.Module):
     def __init__(
         self,
         config,
