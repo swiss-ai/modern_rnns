@@ -24,13 +24,13 @@ class LRUModel(nn.Module):
         self.encoder = StackedEncoderModel(
             input_features=self.input_features, 
             h_dim=c.h_dim,
-            d_model=c.max_seq_len, 
+            d_model=c.d_model,
             n_layers=c.n_layers,
             dropout=dropout,
             norm=norm
         )
 
-        self.decoder = nn.Linear(c.max_seq_len, c.output_size * multidim)
+        self.decoder = nn.Linear(c.d_model, c.output_size * multidim)
 
 
     def get_init_state(self, batch_size, device):

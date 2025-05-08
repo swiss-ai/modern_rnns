@@ -47,13 +47,12 @@ class LayerNorm(nn.Module):
 class MultiHeadLSTMCell(nn.Module):
     """Implements an LSTM cell with multiple heads."""
 
-    def __init__(self, seq_len, h_dim, head_dim, n_heads, name):
+    def __init__(self, h_dim, head_dim, n_heads, name):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
         self.head_dim = head_dim
         self.n_heads = n_heads
-        self.seq_len = seq_len
 
         # linear projections for x (done in parallel)
         self.linear_Fx = nn.Linear(h_dim, head_dim * n_heads, bias=True)
@@ -96,15 +95,15 @@ class MultiHeadLSTMCell(nn.Module):
             torch.nn.init.zeros_(self.linear_post_head.bias)
 
     def forward(self, f_in, i_in, z_in, o_in, state, log=None):
-        bsz, _, _ = f_in.shape
+        bsz, seq_len, _ = f_in.shape
         c, h = state
         check(c, (bsz, self.n_heads, self.head_dim))
         check(h, (bsz, self.n_heads, self.head_dim))
 
-        check(f_in, (bsz, self.seq_len, self.h_dim))
-        check(i_in, (bsz, self.seq_len, self.h_dim))
-        check(z_in, (bsz, self.seq_len, self.h_dim))
-        check(o_in, (bsz, self.seq_len, self.h_dim))
+        check(f_in, (bsz, seq_len, self.h_dim))
+        check(i_in, (bsz,seq_len, self.h_dim))
+        check(z_in, (bsz, seq_len, self.h_dim))
+        check(o_in, (bsz, seq_len, self.h_dim))
 
         # compute the gates given x in parallel
         fx = self.linear_Fx(f_in)  # forget gate
@@ -112,15 +111,15 @@ class MultiHeadLSTMCell(nn.Module):
         zx = self.linear_Zx(z_in)  # cell update
         ox = self.linear_Ox(o_in)  # output gate
 
-        fx = fx.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
-        ix = ix.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
-        zx = zx.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
-        ox = ox.view(bsz, self.seq_len, self.n_heads, self.head_dim).transpose(1, 2)
-        check(fx, (bsz, self.n_heads, self.seq_len, self.head_dim))
+        fx = fx.view(bsz, seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        ix = ix.view(bsz, seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        zx = zx.view(bsz, seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        ox = ox.view(bsz, seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        check(fx, (bsz, self.n_heads, seq_len, self.head_dim))
 
         # iterate over the sequence
         outputs = []
-        for idx in range(self.seq_len):
+        for idx in range(seq_len):
             check(h, (bsz, self.n_heads, self.head_dim))
             h = h.view(bsz, self.n_heads * self.head_dim)
 
@@ -152,187 +151,16 @@ class MultiHeadLSTMCell(nn.Module):
 
         # project all outputs
         outputs = torch.stack(outputs, dim=1)
-        check(outputs, (bsz, self.seq_len, self.n_heads, self.head_dim))
-        y = outputs.reshape(bsz, self.seq_len, self.n_heads * self.head_dim)
+        check(outputs, (bsz, seq_len, self.n_heads, self.head_dim))
+        y = outputs.reshape(bsz, seq_len, self.n_heads * self.head_dim)
         if self.n_heads > 1:
             y = self.linear_post_head(y)
-        check(y, (bsz, self.seq_len, self.h_dim))
+        check(y, (bsz, seq_len, self.h_dim))
 
         return y, state
 
     def __repr__(self):
         return f"MultiHeadLSTMCell(h_dim={self.h_dim}, head_dim={self.head_dim}, n_heads={self.n_heads}, name={self.name})"
-
-
-class MultiHeadQuasiLSTMCell(nn.Module):
-    """Implements an LSTM cell where every gate only depends on x and not on h for better parallelisation."""
-
-    def __init__(self, seq_len, h_dim, head_dim, n_heads, name, block_length, max_seq_len=2048):
-        super().__init__()
-        self.name = name
-        self.h_dim = h_dim
-        self.head_dim = head_dim
-        self.n_heads = n_heads
-        self.block_length = block_length
-        self.seq_len = seq_len
-
-        # linear projections for x (done in parallel)
-        self.linear_Fx = nn.Linear(h_dim, head_dim * n_heads, bias=True)
-        torch.nn.init.normal_(self.linear_Fx.weight, mean=0.0, std=0.02)
-        torch.nn.init.zeros_(self.linear_Fx.bias)
-
-        self.linear_Ix = nn.Linear(h_dim, head_dim * n_heads, bias=True)
-        torch.nn.init.normal_(self.linear_Ix.weight, mean=0.0, std=0.02)
-        torch.nn.init.zeros_(self.linear_Ix.bias)
-
-        self.linear_Zx = nn.Linear(h_dim, head_dim * n_heads, bias=True)
-        torch.nn.init.normal_(self.linear_Zx.weight, mean=0.0, std=0.02)
-        torch.nn.init.zeros_(self.linear_Zx.bias)
-
-        self.linear_Ox = nn.Linear(h_dim, head_dim * n_heads, bias=True)
-        torch.nn.init.normal_(self.linear_Ox.weight, mean=0.0, std=0.02)
-        torch.nn.init.zeros_(self.linear_Ox.bias)
-
-        # masks used to parallelise the quasi-lstm computation
-        ones_mask = torch.tril(torch.ones((max_seq_len + 1, max_seq_len)), diagonal=-1).T
-        ones_mask = torch.reshape(ones_mask, (1, 1, 1, max_seq_len, max_seq_len + 1))
-        self.register_buffer("ones_mask", ones_mask)
-
-        zeros_mask = torch.tril(torch.ones((max_seq_len + 1, max_seq_len)), diagonal=-2).T
-        zeros_mask = torch.reshape(zeros_mask, (1, 1, 1, max_seq_len, max_seq_len + 1))
-        self.register_buffer("zeros_mask", zeros_mask)
-
-        # additional linear layer to project all heads back to h_dim in case of multiple heads (as in attention)
-        self.linear_post_head = nn.Linear(head_dim * n_heads, h_dim, bias=True)
-        torch.nn.init.normal_(self.linear_post_head.weight, mean=0.0, std=0.02)
-        torch.nn.init.zeros_(self.linear_post_head.bias)
-
-    def forward(self, f_in, i_in, z_in, o_in, state, log=None):
-        bsz, _, _ = f_in.shape
-
-        c, h = state
-        check(c, (bsz, self.n_heads, self.head_dim))
-        check(h, (bsz, self.n_heads, self.head_dim))
-
-        check(f_in, (bsz, self.seq_len, self.h_dim))
-        check(i_in, (bsz, self.seq_len, self.h_dim))
-        check(z_in, (bsz, self.seq_len, self.h_dim))
-        check(o_in, (bsz, self.seq_len, self.h_dim))
-
-        # compute the gates given x in parallel
-        fx = self.linear_Fx(f_in)  # forget gate
-        ix = self.linear_Ix(i_in)  # input gate
-        zx = self.linear_Zx(z_in)  # cell update
-        ox = self.linear_Ox(o_in)  # output gate
-
-        # split sequence into blocks
-        assert self.seq_len % self.block_length == 0
-        n_blocks = self.seq_len // self.block_length
-
-        fx = fx.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        ix = ix.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        zx = zx.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        ox = ox.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
-        check(fx, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
-
-        f = torch.sigmoid(fx + 1.0)
-        o = torch.sigmoid(ox)
-        check(f, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
-
-        update = torch.sigmoid(ix) * torch.tanh(zx)
-        check(update, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
-
-        # below is the slow implementation
-        """
-        block_hs = []
-        block_cs = []
-        for block_idx in range(n_blocks):
-          #curr_hs = []
-          curr_cs = []
-          for step_idx in range(self.block_length):
-            c = c * f[block_idx,:,:,:,step_idx] + update[block_idx,:,:,:,step_idx]
-            check(c, (bsz, self.n_heads, self.head_dim))
-            curr_cs.append(c)
-
-            #h = o[block_idx,:,:,:,step_idx] * torch.tanh(c)
-            #check(h, (bsz, self.n_heads, self.head_dim))
-
-            #curr_hs.append(h)
-
-          cs = torch.stack(curr_cs, dim=-1)
-          hs = o[block_idx] * torch.tanh(cs)
-          check(hs, (bsz, self.n_heads, self.head_dim, self.block_length))
-          #block_hs.append(torch.stack(curr_hs, dim=-1))
-          block_hs.append(hs)
-          #block_cs.append(cs)
-        #"""
-
-        # below is the identical fast implementation (less efficient but more parallel, thus more throughput)
-        # """
-        c, h = state
-        block_hs = []
-        for block_idx in range(n_blocks):
-            curr_f = f[block_idx]
-            check(curr_f, (bsz, self.n_heads, self.head_dim, self.block_length))
-
-            # concatenate a 1.0 to the list of forget gates
-            curr_f = torch.concatenate([
-                curr_f,
-                torch.ones((bsz, self.n_heads, self.head_dim, 1), device=curr_f.device)
-            ], dim=3)
-            check(curr_f, (bsz, self.n_heads, self.head_dim, self.block_length + 1))
-
-            # tile curr_f to construct the matrix F
-            F = torch.tile(curr_f.unsqueeze(3), (1, 1, 1, self.block_length, 1))
-            check(F, (bsz, self.n_heads, self.head_dim, self.block_length, self.block_length + 1))
-
-            # mask upper triangle part with ones
-            F = F.masked_fill(self.ones_mask[:, :, :, :self.block_length, :self.block_length + 1] == 1.0, 1.0)
-
-            # compute factorials and mask out the lower part again
-            # uses cumsum because cumprod backward results in errors
-            F = torch.cumsum(torch.log(F + 1e-8).flip(dims=[-1]), dim=-1).flip(dims=[-1]).exp() - 1e-8
-
-            # mask upper triangle with zeroes
-            F = F.masked_fill(self.zeros_mask[:, :, :, :self.block_length, :self.block_length + 1] == 1.0, 0.0)
-
-            # concatenate previous cell state with the cell updates
-            check(c, (bsz, self.n_heads, self.head_dim))
-            check(update, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
-            u = torch.concatenate([c.unsqueeze(3), update[block_idx]], dim=3)
-
-            check(u, (bsz, self.n_heads, self.head_dim, self.block_length + 1))
-            check(F, (bsz, self.n_heads, self.head_dim, self.block_length, self.block_length + 1))
-            cs = torch.einsum("bhdkl,bhdl->bhdk", F, u)
-            check(cs, (bsz, self.n_heads, self.head_dim, self.block_length))
-
-            # from the cell state at each step we compute the output
-            hs = o[block_idx] * torch.tanh(cs)
-            check(hs, (bsz, self.n_heads, self.head_dim, self.block_length))
-
-            block_hs.append(hs)
-            c = cs[:, :, :, -1]
-        # """
-
-        hs = torch.stack(block_hs, dim=0)
-        check(hs, (n_blocks, bsz, self.n_heads, self.head_dim, self.block_length))
-
-        last_c = c
-        last_h = block_hs[-1][:, :, :, -1]
-
-        check(last_c, (bsz, self.n_heads, self.head_dim))
-        check(last_h, (bsz, self.n_heads, self.head_dim))
-        state = last_c, last_h
-
-        # project all outputs
-        y = hs.permute(1, 0, 4, 2, 3).reshape(bsz, self.seq_len, self.n_heads * self.head_dim)
-        y = self.linear_post_head(y)
-        check(y, (bsz, self.seq_len, self.h_dim))
-
-        return y, state
-
-    def __repr__(self):
-        return f"MultiHeadQuasiLSTMCell(h_dim={self.h_dim}, head_dim={self.head_dim}, n_heads={self.n_heads}, block_length={self.block_length}, name={self.name})"
 
 
 class MLP(torch.nn.Module):
@@ -372,23 +200,22 @@ class MLP(torch.nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, block_length, name):
+    def __init__(self, h_dim, mlp_dim, head_dim, n_heads, n_layers, block_length, name):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
-        self.seq_len = seq_len
 
         self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
 
-        self.rnn = MultiHeadLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
+        self.rnn = MultiHeadLSTMCell(h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
                                   name=f"{self.name}.MultiHeadLSTM")
 
         self.ln2 = LayerNorm(h_dim, name=f"{self.name}.ln2")
         self.mlp = MLP(h_dim=h_dim, mlp_dim=mlp_dim, n_layers=n_layers, name=f"{self.name}.MLP")
 
     def forward(self, x, state, log=None):
-        bsz, _, _ = x.shape
-        check(x, (bsz, self.seq_len, self.h_dim))
+        bsz, seq_len, _ = x.shape
+        check(x, (bsz, seq_len, self.h_dim))
 
         ln_x = self.ln1(x, log=log)
         rnn_x, new_state = self.rnn(f_in=ln_x, i_in=ln_x, z_in=ln_x, o_in=ln_x, state=state, log=log)

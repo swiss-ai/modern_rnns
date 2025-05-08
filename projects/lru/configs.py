@@ -88,8 +88,9 @@ def load_config(name=None):
     # model
     if name == "mini":
         c.n_layers = 2
-        c.h_dim = 4
+        c.h_dim = 8
         c.mlp_dim = 8
+        c.d_model = 8
 
         # Dataset config
         c.output_size = 2
@@ -103,16 +104,14 @@ def load_config(name=None):
         # MQAR specific
         c.n_keys = 3
         c.n_values = 6
-        c.train_num_pairs = "3,3"
-        c.eval_num_pairs = "3,3"
-        c.max_num_pairs = 3
+        c.train_num_pairs = "2,3"
+        c.eval_num_pairs = "3,6"
         c.unique_keys = True
         c.all_queries_for_input = False
 
         # Bit parity specific
-        c.train_seq_len = "8,8"
-        c.eval_seq_len = "8,8"
-        c.max_seq_len = 8
+        c.train_seq_len = "3,8"
+        c.eval_seq_len = "12,15"
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

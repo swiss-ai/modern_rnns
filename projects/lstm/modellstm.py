@@ -21,7 +21,7 @@ from projects.lstm.lib import LayerNorm
 from projects.lstm.lib import Block
 
 
-class Model(torch.nn.Module):
+class ModelLSTM(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
         self.c = c = config
@@ -37,7 +37,6 @@ class Model(torch.nn.Module):
         for i in range(c.n_layers):
             self.layers.append(
                 Block(
-                    seq_len=c.max_seq_len,
                     h_dim=c.h_dim,
                     mlp_dim=c.mlp_dim,
                     head_dim=c.head_dim,

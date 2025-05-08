@@ -36,13 +36,11 @@ def run(config, logger):
         train_ds = BitParityDatasetIterator(
             batch_size=config.train_batch_size,
             sequence_length=config.train_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
         )
         eval_ds = BitParityDatasetIterator(
             batch_size=config.eval_batch_size,
             sequence_length=config.eval_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
         )
 
@@ -51,7 +49,6 @@ def run(config, logger):
         train_ds = DyckDatasetIterator(
             batch_size=config.train_batch_size,
             sequence_length=config.train_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
             depth=config.depth,
             num_parentheses=config.num_parentheses,
@@ -59,7 +56,6 @@ def run(config, logger):
         eval_ds = DyckDatasetIterator(
             batch_size=config.eval_batch_size,
             sequence_length=config.eval_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
             depth=config.depth,
             num_parentheses=config.num_parentheses,
@@ -73,7 +69,6 @@ def run(config, logger):
             num_pairs=config.train_num_pairs,
             n_keys=config.n_keys,
             n_values=config.n_values,
-            pad_num_pairs=config.max_num_pairs,
             unique_keys=config.unique_keys,
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
@@ -83,7 +78,6 @@ def run(config, logger):
             num_pairs=config.eval_num_pairs,
             n_keys=config.n_keys,
             n_values=config.n_values,
-            pad_num_pairs=config.max_num_pairs,
             unique_keys=config.unique_keys,
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
