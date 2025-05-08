@@ -1,45 +1,25 @@
 import torch
 
+from common_lib.dataset_utils import parse_sequence_length
+
 
 class BitParityDatasetIterator:
-    def __init__(self, batch_size, sequence_length, pad_sequence_length, device="cpu"):
+    def __init__(self, batch_size, sequence_length, device="cpu"):
         """
         A dataset iterator that generates synthetic binary sequences and their parity labels.
 
         Args:
             batch_size (int): Number of sequences per batch.
             sequence_length (string): String concatenating the min and max lengths of the sequence.
-            pad_sequence_length (int): Maximum possible length of the binary sequence.
-                It pads all sequences to this length.
             device (str): Device to store the tensors ('cpu' or 'cuda').
         """
         self.batch_size = batch_size
-        self.min_seq_len, self.max_seq_len = self._parse_sequence_length(
+        self.min_seq_len, self.max_seq_len = parse_sequence_length(
             sequence_length
         )
-        self.pad_sequence_length = pad_sequence_length
-        if self.pad_sequence_length < self.max_seq_len:
-            raise ValueError(
-                f"The total padded sequence length [{self.pad_sequence_length}] "
-                "must be greater than or equal to the max sequence length [{self.max_seq_len}]."
-            )
         self.device = device
 
-    def _parse_sequence_length(self, sequence_length):
-        values = tuple(map(int, sequence_length.split(",")))
-        if len(values) != 2:
-            raise ValueError(
-                "Sequence length must be in the format 'int,int' (e.g., 5,10)."
-            )
-        if values[0] > values[1]:
-            raise ValueError(
-                "The first element of sequence_length must be less than or equal to the second."
-            )
-        if values[0] <= 0 or values[1] <= 0:
-            raise ValueError(
-                "Both elements of sequence_length must be positive integers."
-            )
-        return values[0], values[1]
+
 
     def __iter__(self):
         return self
@@ -52,9 +32,6 @@ class BitParityDatasetIterator:
         ).item()
         batch_x = torch.randint(
             0, 2, (self.batch_size, sequence_length), dtype=torch.int64
-        )
-        batch_x = torch.nn.functional.pad(
-            batch_x, (0, self.pad_sequence_length - sequence_length), value=0
         )
 
         # Compute parity (sum of 1s mod 2) and convert to one-hot
@@ -70,7 +47,7 @@ class BitParityDatasetIterator:
         # Compute parity labels without using cumsum
         parity_labels = [
             batch_x[:, : i + 1].sum(dim=1) % 2 == 0
-            for i in range(self.pad_sequence_length)
+            for i in range(sequence_length)
         ]
         batch_y = torch.stack(parity_labels, dim=1).to(dtype=torch.float)
         batch_y = torch.stack([1 - batch_y, batch_y], dim=2)
@@ -81,7 +58,7 @@ class BitParityDatasetIterator:
 # Example usage
 if __name__ == "__main__":
     dataset = BitParityDatasetIterator(
-        batch_size=8, sequence_length="10,10", pad_sequence_length=10, device="cpu"
+        batch_size=1, sequence_length="3,3", device="cpu"
     )
     for _ in range(3):  # Generate 3 batches
         x, y = next(dataset)

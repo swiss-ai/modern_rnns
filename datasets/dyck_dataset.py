@@ -1,10 +1,11 @@
 import torch
 import numpy as np
 
+from common_lib.dataset_utils import parse_sequence_length
 
 class DyckDatasetIterator:
     def __init__(
-        self, batch_size, sequence_length, num_parentheses, pad_sequence_length, depth, device="cpu"
+        self, batch_size, sequence_length, num_parentheses, depth, device="cpu"
     ):
         """
         A dataset iterator that generates synthetic Dyck langauge sequences and
@@ -18,29 +19,12 @@ class DyckDatasetIterator:
             device (str): Device to store the tensors ('cpu' or 'cuda').
         """
         self.batch_size = batch_size
-        self.min_seq_len, self.max_seq_len = self._parse_sequence_length(
+        self.min_seq_len, self.max_seq_len = parse_sequence_length(
             sequence_length
         )
-        self.pad_sequence_length = pad_sequence_length
         self.num_parentheses = num_parentheses
         self.depth = depth
         self.device = device
-
-    def _parse_sequence_length(self, sequence_length):
-        values = tuple(map(int, sequence_length.split(",")))
-        if len(values) != 2:
-            raise ValueError(
-                "Sequence length must be in the format 'int,int' (e.g., 5,10)."
-            )
-        if values[0] > values[1]:
-            raise ValueError(
-                "The first element of sequence_length must be less than or equal to the second."
-            )
-        if values[0] <= 0 or values[1] <= 0:
-            raise ValueError(
-                "Both elements of sequence_length must be positive integers."
-            )
-        return values[0], values[1]
 
     def __iter__(self):
         return self
@@ -153,19 +137,13 @@ class DyckDatasetIterator:
 
         batch_sequences = torch.tensor(batch_sequences)
         batch_labels = torch.tensor(batch_labels)
-        batch_sequences = torch.nn.functional.pad(
-            batch_sequences, (0, self.pad_sequence_length - sequence_length), value=self.num_parentheses * 2 + 1
-        )
-        batch_labels = torch.nn.functional.pad(
-            batch_labels, (0, self.pad_sequence_length - sequence_length), value=1
-        )
         return batch_sequences.to(self.device), batch_labels.to(self.device)
 
 
 # Example usage
 if __name__ == "__main__":
     dataset = DyckDatasetIterator(
-        batch_size=2, sequence_length=8, num_parentheses=3, depth=4, device="cpu"
+        batch_size=1, sequence_length=8, num_parentheses=3, depth=4, device="cpu"
     )
     for _ in range(3):  # Generate 3 batches
         x, y = next(dataset)

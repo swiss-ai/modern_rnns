@@ -5,8 +5,7 @@ from typing import Tuple, Dict
 class MQARDatasetIterator:
     def __init__(self, batch_size: int, num_pairs: int = 500, 
                 n_keys: int = 1000, 
-                n_values: int = 1000, 
-                pad_num_pairs: int = 500,
+                n_values: int = 1000,
                 unique_keys: bool = True, 
                 all_queries_for_input = False,
                 device: str ="cpu"):
@@ -32,7 +31,6 @@ class MQARDatasetIterator:
         self.num_pairs = num_pairs
         self.n_keys = n_keys
         self.n_values = n_values
-        self.pad_num_pairs = pad_num_pairs
         self.unique_keys = unique_keys
         self.all_queries_for_input = all_queries_for_input
         self.device = device
@@ -130,9 +128,7 @@ class MQARDatasetIterator:
 
         batch_sequences = torch.stack(batch_sequences)
         batch_targets = torch.stack(batch_targets)
-        batch_sequences = torch.nn.functional.pad(
-            batch_sequences, (0, (self.pad_num_pairs - num_pairs) * 2 + 1), value = 0
-        )
+
         return batch_sequences, batch_targets
 
     def __generate_all_queries(self):

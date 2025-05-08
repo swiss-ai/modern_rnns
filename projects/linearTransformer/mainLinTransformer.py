@@ -39,6 +39,7 @@ import torch
 
 
 from common_lib import experiment_utils
+from common_lib.dataset_utils import parse_sequence_length
 from common_lib.parallel_utils import mprint
 
 
@@ -59,13 +60,11 @@ def run(config, logger):
         train_ds = BitParityDatasetIterator(
             batch_size=config.train_batch_size,
             sequence_length=config.train_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
         )
         eval_ds = BitParityDatasetIterator(
             batch_size=config.eval_batch_size,
             sequence_length=config.eval_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
         )
 
@@ -74,7 +73,6 @@ def run(config, logger):
         train_ds = DyckDatasetIterator(
             batch_size=config.train_batch_size,
             sequence_length=config.train_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
             depth=config.depth,
             num_parentheses=config.num_parentheses,
@@ -82,7 +80,6 @@ def run(config, logger):
         eval_ds = DyckDatasetIterator(
             batch_size=config.eval_batch_size,
             sequence_length=config.eval_seq_len,
-            pad_sequence_length=config.max_seq_len,
             device=config.device,
             depth=config.depth,
             num_parentheses=config.num_parentheses,
@@ -96,7 +93,6 @@ def run(config, logger):
             num_pairs=config.train_num_pairs,
             n_keys=config.n_keys,
             n_values=config.n_values,
-            pad_num_pairs=config.max_num_pairs,
             unique_keys=config.unique_keys,
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
@@ -106,7 +102,6 @@ def run(config, logger):
             num_pairs=config.eval_num_pairs,
             n_keys=config.n_keys,
             n_values=config.n_values,
-            pad_num_pairs=config.max_num_pairs,
             unique_keys=config.unique_keys,
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
@@ -156,6 +151,14 @@ def main():
     config = configs.load_config(name=config_name)
     config.project_path = os.path.dirname(os.path.abspath(__file__))
     mprint(f"project path: {config.project_path}")
+
+    _, train_max_seq_len = parse_sequence_length(
+        config.train_seq_len
+    )
+    _, test_max_seq_size = parse_sequence_length(
+        config.eval_seq_len
+    )
+    config.max_seq_len = max(train_max_seq_len, test_max_seq_size)
 
     parser = experiment_utils.create_parser_based_on_config(config)
 

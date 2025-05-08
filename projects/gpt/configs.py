@@ -105,16 +105,14 @@ def load_config(name=None):
         #MQAR specific
         c.n_keys = 3
         c.n_values = 6
-        c.train_num_pairs = "3,3"
-        c.eval_num_pairs = "3,3"
-        c.max_num_pairs = 3 
+        c.train_num_pairs = "2,3"
+        c.eval_num_pairs = "3,5"
         c.unique_keys = True
         c.all_queries_for_input = False
 
         # Bit parity specific
-        c.train_seq_len = "8,8"
-        c.eval_seq_len = "16,16"
-        c.max_seq_len = 16
+        c.train_seq_len = "3,10"
+        c.eval_seq_len = "2,11"
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

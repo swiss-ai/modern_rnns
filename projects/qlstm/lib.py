@@ -46,14 +46,13 @@ class LayerNorm(nn.Module):
 class MultiHeadQuasiLSTMCell(nn.Module):
     """Implements an LSTM cell where every gate only depends on x and not on h for better parallelisation."""
 
-    def __init__(self, seq_len, h_dim, head_dim, n_heads, name, block_length, max_seq_len=2048):
+    def __init__(self, h_dim, head_dim, n_heads, name, block_length, max_seq_len=2048):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
         self.head_dim = head_dim
         self.n_heads = n_heads
         self.block_length = block_length
-        self.seq_len = seq_len
 
         # linear projections for x (done in parallel)
         self.linear_Fx = nn.Linear(h_dim, head_dim * n_heads, bias=True)
@@ -87,16 +86,16 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         torch.nn.init.zeros_(self.linear_post_head.bias)
 
     def forward(self, f_in, i_in, z_in, o_in, state, log=None):
-        bsz, _, _ = f_in.shape
+        bsz, seq_len, _ = f_in.shape
 
         c, h = state
         check(c, (bsz, self.n_heads, self.head_dim))
         check(h, (bsz, self.n_heads, self.head_dim))
 
-        check(f_in, (bsz, self.seq_len, self.h_dim))
-        check(i_in, (bsz, self.seq_len, self.h_dim))
-        check(z_in, (bsz, self.seq_len, self.h_dim))
-        check(o_in, (bsz, self.seq_len, self.h_dim))
+        check(f_in, (bsz, seq_len, self.h_dim))
+        check(i_in, (bsz, seq_len, self.h_dim))
+        check(z_in, (bsz, seq_len, self.h_dim))
+        check(o_in, (bsz, seq_len, self.h_dim))
 
         # compute the gates given x in parallel
         fx = self.linear_Fx(f_in)  # forget gate
@@ -105,8 +104,8 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         ox = self.linear_Ox(o_in)  # output gate
 
         # split sequence into blocks
-        assert self.seq_len % self.block_length == 0
-        n_blocks = self.seq_len // self.block_length
+        assert seq_len % self.block_length == 0
+        n_blocks = seq_len // self.block_length
 
         fx = fx.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
         ix = ix.view(bsz, n_blocks, self.block_length, self.n_heads, self.head_dim).permute(1, 0, 3, 4, 2)
@@ -204,9 +203,9 @@ class MultiHeadQuasiLSTMCell(nn.Module):
         state = last_c, last_h
 
         # project all outputs
-        y = hs.permute(1, 0, 4, 2, 3).reshape(bsz, self.seq_len, self.n_heads * self.head_dim)
+        y = hs.permute(1, 0, 4, 2, 3).reshape(bsz, seq_len, self.n_heads * self.head_dim)
         y = self.linear_post_head(y)
-        check(y, (bsz, self.seq_len, self.h_dim))
+        check(y, (bsz, seq_len, self.h_dim))
 
         return y, state
 
@@ -251,15 +250,14 @@ class MLP(torch.nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, seq_len, h_dim, mlp_dim, head_dim, n_heads, n_layers, block_length, name):
+    def __init__(self, h_dim, mlp_dim, head_dim, n_heads, n_layers, block_length, name):
         super().__init__()
         self.name = name
         self.h_dim = h_dim
-        self.seq_len = seq_len
 
         self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
 
-        self.rnn = MultiHeadQuasiLSTMCell(seq_len=seq_len, h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
+        self.rnn = MultiHeadQuasiLSTMCell(h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
                                               block_length=block_length,
                                               name=f"{self.name}.MultiHeadQuasiLSTM")
 
@@ -267,8 +265,8 @@ class Block(nn.Module):
         self.mlp = MLP(h_dim=h_dim, mlp_dim=mlp_dim, n_layers=n_layers, name=f"{self.name}.MLP")
 
     def forward(self, x, state, log=None):
-        bsz, _, _ = x.shape
-        check(x, (bsz, self.seq_len, self.h_dim))
+        bsz, seq_len, _ = x.shape
+        check(x, (bsz, seq_len, self.h_dim))
 
         ln_x = self.ln1(x, log=log)
         rnn_x, new_state = self.rnn(f_in=ln_x, i_in=ln_x, z_in=ln_x, o_in=ln_x, state=state, log=log)
