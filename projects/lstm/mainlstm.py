@@ -62,12 +62,14 @@ def run(config, logger):
             batch_size=config.train_batch_size,
             sequence_length=config.train_seq_len,
             pad_sequence_length=config.max_seq_len,
+            num_ones=config.num_ones,
             device=config.device,
         )
         eval_ds = BitParityDatasetIterator(
             batch_size=config.eval_batch_size,
             sequence_length=config.eval_seq_len,
             pad_sequence_length=config.max_seq_len,
+            num_ones=config.num_ones,
             device=config.device,
         )
 

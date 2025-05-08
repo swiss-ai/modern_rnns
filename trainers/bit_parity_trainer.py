@@ -23,7 +23,7 @@ class BitParityTrainer:
         self.eval_loader = eval_loader
         self.optimizer = optimizer
         self.device = device
-        self.max_steps = config.max_steps
+        self.max_steps = max_steps 
         self.eval_every = eval_every
         self.logger = logger
         self.criterion = torch.nn.CrossEntropyLoss()

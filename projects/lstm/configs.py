@@ -111,9 +111,10 @@ def load_config(name=None):
         c.all_queries_for_input = False
 
         # Bit parity specific
-        c.train_seq_len = "8,8"
-        c.eval_seq_len = "8,8"
-        c.max_seq_len = 8
+        c.train_seq_len = "64,64"
+        c.eval_seq_len = "96,96"
+        c.max_seq_len = 96
+        c.num_ones = None
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 
