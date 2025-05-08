@@ -150,7 +150,7 @@ def run(config, logger):
 
 
 def main():
-    """Runs an experiment using an LSTM model."""
+    """Runs an experiment using an decoder LSTM model."""
     config_name = experiment_utils.parse_config_name(configs.config_names)
     mprint(f"Loading config: {config_name}")
 
