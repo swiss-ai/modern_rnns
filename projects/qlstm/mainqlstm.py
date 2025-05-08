@@ -47,7 +47,7 @@ from common_lib.parallel_utils import mprint
 # from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
 
 import configs
-from modelqlstm import Model
+from modelqlstm import ModelQLSTM 
 from datasets.mqar_dataset import MQARDatasetIterator
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
@@ -120,7 +120,7 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = Model(config=config)
+    model = ModelQLSTM(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser

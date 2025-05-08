@@ -28,7 +28,7 @@ config_names = [
 def add_exp_name(config):
     """Constructs the name of the log folder used to easily identify the experiment."""
     c = config
-    c.exp_name = "{}LSTM{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
+    c.exp_name = "{}LRU{}_{}_sl{}_h{}_ff{}_nH{}_dH{}_nl{}_seed{}{}{}".format(
         "basic",
         "",
         c.dataset,
@@ -79,7 +79,7 @@ def load_config(name=None):
         # logging
         comment="",
         logger_type="wandb",  # can be 'tb', 'wandb' or 'all'
-        wandb_project_name="lstm",
+        wandb_project_name="lru",
     )
     # default model
     if not name or name == "default":
@@ -103,14 +103,16 @@ def load_config(name=None):
         # MQAR specific
         c.n_keys = 3
         c.n_values = 6
-        c.train_num_pairs = "2,3"
-        c.eval_num_pairs = "3,6"
+        c.train_num_pairs = "3,3"
+        c.eval_num_pairs = "3,3"
+        c.max_num_pairs = 3
         c.unique_keys = True
         c.all_queries_for_input = False
 
         # Bit parity specific
-        c.train_seq_len = "4,8"
-        c.eval_seq_len = "8,16"
+        c.train_seq_len = "8,8"
+        c.eval_seq_len = "8,8"
+        c.max_seq_len = 8
     else:
         raise ValueError(f"Config name {name} is an invalid name. ")
 

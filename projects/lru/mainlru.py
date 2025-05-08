@@ -12,42 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Script to train models on the languini books dataset.
-
-# Example calls:
-
-## Single GPU:
-CUDA_VISIBLE_DEVICES=0 torchrun --standalone languini/projects/lstm/main.py tiny --train_batch_size 16 --debug
-
-## Multi GPU:
-CUDA_VISIBLE_DEVICES=0,1 torchrun --nnodes=1 --node_rank=0 --nproc_per_node=2 --master_addr=server.example.com --master_port=12300 \
-    languini/projects/lstm/main.py tiny \
-    --train_batch_size 16 \
-    --eval_every 1000 \
-    --log_grads_every 1000 \
-    --tokens_per_second 36930 \
-    --decay_steps 19475 \
-    --max_train_steps 19475 \
-    --gradient_accumulation_steps 2
-"""
-
 import argparse
 import os
 import sys
-
 import torch
 
-# from languini.train_lib import lm_trainer
-# from languini.train_lib import lr_schedules
-# from languini.common_lib import parallel_utils
+import configs
 from common_lib import experiment_utils
 from common_lib.parallel_utils import mprint
 
-# from languini.common_lib.parallel_utils import LOCAL_RANK, WORLD_RANK, WORLD_SIZE
-
-import configs
-from basic_lstm_model import ModelLSTM 
 from datasets.mqar_dataset import MQARDatasetIterator
+from modellru import LRUModel
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
@@ -117,7 +92,7 @@ def run(config, logger):
         config.output_size = config.n_values + 1
         config.max_seq_len = max(config.max_num_pairs * 3, config.max_seq_len)
 
-        trainerClass = MQARTrainer 
+        trainerClass = MQARTrainer
     else:
         # add the configuration for each new dataset here
         raise RuntimeError(
@@ -126,13 +101,12 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = ModelLSTM(config=config)
+    model = LRUModel(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser
-    opt = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.95), eps=1e-08)
+    opt = torch.optim.Adam(model.parameters(), lr=0.01, betas=(0.9, 0.95), eps=1e-08)
 
-    ## Setup Trainer
     trainer = trainerClass(
         config=config,
         model=model,
@@ -143,14 +117,13 @@ def run(config, logger):
         logger=logger,
     )
 
-    ## Start Experiment
     print("Begin training ... ")
     trainer.train()
     print("Done!")
 
 
 def main():
-    """Runs an experiment using an LSTM model."""
+    """Runs an experiment using a LRU model."""
     config_name = experiment_utils.parse_config_name(configs.config_names)
     mprint(f"Loading config: {config_name}")
 
@@ -161,7 +134,6 @@ def main():
 
     parser = experiment_utils.create_parser_based_on_config(config)
 
-    # Add custom arguments
     parser.add_argument(
         "--device",
         type=str,

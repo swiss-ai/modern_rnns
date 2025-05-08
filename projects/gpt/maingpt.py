@@ -42,7 +42,7 @@ from common_lib.dataset_utils import parse_sequence_length
 from common_lib.parallel_utils import mprint
 
 from datasets.mqar_dataset import MQARDatasetIterator
-from modelgpt import Model
+from modelgpt import ModelGPT
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
 from datasets.bit_parity_dataset import BitParityDatasetIterator
@@ -112,7 +112,7 @@ def run(config, logger):
         )
         config.num_input_classes = max(config.n_keys, config.n_values + 1) + 1
         config.output_size = config.n_values + 1
-        config.max_seq_len = config.max_num_pairs * 3
+        config.max_seq_len = max(config.max_num_pairs * 3, config.max_seq_len)
 
         trainerClass = MQARTrainer 
     else:
@@ -123,7 +123,7 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = Model(config=config)
+    model = ModelGPT(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser
