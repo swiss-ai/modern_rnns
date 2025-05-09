@@ -38,7 +38,7 @@ class LayerNorm(nn.Module):
         return y
 
 
-class CausalSelfAttention(nn.Module):
+class LinearAttention(nn.Module):
     def __init__(self, h_dim, head_dim, n_heads, name, use_flash, max_seq_len=4096):
         super().__init__()
         self.name = name
@@ -91,10 +91,11 @@ class CausalSelfAttention(nn.Module):
         check(q, (bsz, self.n_heads, seqlen, self.head_dim))
 
         q_phi = phi(q)  # [b, h, s, d]
-        k_phi = phi(k)
+        k_phi = phi(k)  # [b, h, s, d]
 
 
         # Numerator: cumulative sum of phi(k) * v
+        # [b, h, s, d, 1] * [b, h, s, 1, d] -> [b, h, s, d, d]
         kv = k_phi.unsqueeze(-1) * v.unsqueeze(-2)  # [b, h, s, d, d]
         kv_cumsum = torch.cumsum(kv, dim=2)  # [b, h, s, d, d]
 
@@ -104,7 +105,7 @@ class CausalSelfAttention(nn.Module):
         # Compute attention output
         # out[b, h, i, d] = phi(q_i) @ (∑_{j ≤ i} phi(k_j) v_j^T) / (phi(q_i) @ ∑_{j ≤ i} phi(k_j))
         # First do numerator
-        out_numerator = torch.einsum("bhid,bhidj->bhij", q_phi, kv_cumsum)  # [b, h, s, d]
+        out_numerator = torch.einsum("bhid,bhidd->bhid", q_phi, kv_cumsum)  # [b, h, s, d]
         out_denominator = torch.einsum("bhid,bhid->bhi", q_phi, k_phi_cumsum)  # [b, h, s]
 
         # Normalize: avoid divide-by-zero
@@ -163,7 +164,7 @@ class Block(nn.Module):
         self.use_flash = use_flash
         self.h_dim = h_dim
         self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
-        self.attn = CausalSelfAttention(h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
+        self.attn = LinearAttention(h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
                                         name=f"{self.name}.CausalAttn",
                                         use_flash=self.use_flash,
                                         max_seq_len=max_seq_len)

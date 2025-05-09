@@ -29,16 +29,22 @@ class LayerNorm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(h_dim))
 
     def forward(self, x, log=None):
+        if torch.isnan(x).any():
+            print("bad x")
+        x = torch.clamp(x, -1e4, 1e4)
+
         bsz, seqlen, _ = x.shape
         check(x, (bsz, seqlen, self.h_dim))
 
         # log_stats_and_dist(x, f"{self.name}.preLN", log)
         y = F.layer_norm(x, self.weight.shape, self.weight, self.bias, 1e-5)
         # log_stats_and_dist(x, f"{self.name}.postLN", log)
+        if torch.isnan(y).any():
+            print("bad ln")
         return y
 
 
-class CausalSelfAttention(nn.Module):
+class DeltaRule(nn.Module):
     def __init__(self, h_dim, head_dim, n_heads, name, use_flash, max_seq_len=4096):
         super().__init__()
         self.name = name
@@ -63,6 +69,11 @@ class CausalSelfAttention(nn.Module):
         torch.nn.init.normal_(self.linear_O.weight, mean=0.0, std=0.02)
         torch.nn.init.zeros_(self.linear_O.bias)
 
+        self.linear_beta = nn.Linear(h_dim, n_heads, bias=True)
+        torch.nn.init.normal_(self.linear_beta.weight, mean=0.0, std=0.02)
+        torch.nn.init.zeros_(self.linear_beta.bias)
+
+        self.sigma = nn.Sigmoid()
 
         # construct and store the following objects during initialisation for a faster forward pass
         self.dot_scale = float(head_dim) ** -0.5
@@ -70,7 +81,7 @@ class CausalSelfAttention(nn.Module):
                             torch.tril(torch.ones(max_seq_len, max_seq_len))
                             .view(1, 1, max_seq_len, max_seq_len))
 
-    def forward(self, query, key, value, log=None):
+    def forward(self, query, key, value, beta, log=None):
         bsz, seqlen, _ = query.shape
         check(query, (bsz, seqlen, self.h_dim))
         check(key, (bsz, seqlen, self.h_dim))
@@ -79,39 +90,56 @@ class CausalSelfAttention(nn.Module):
         q = self.linear_Q(query)
         k = self.linear_K(key)
         v = self.linear_V(value)
+        b = self.linear_beta(beta)
 
-        # log q,k,v activations
-        # log_stats_and_dist(q, f"{self.name}.q", log)
-        # log_stats_and_dist(k, f"{self.name}.k", log)
-        # log_stats_and_dist(v, f"{self.name}.v", log)
 
         q = q.view(bsz, seqlen, self.n_heads, self.head_dim).transpose(1, 2)
         k = k.view(bsz, seqlen, self.n_heads, self.head_dim).transpose(1, 2)
         v = v.view(bsz, seqlen, self.n_heads, self.head_dim).transpose(1, 2)
         check(q, (bsz, self.n_heads, seqlen, self.head_dim))
 
-        q_phi = phi(q)  # [b, h, s, d]
-        k_phi = phi(k)
+        b = b.view(bsz, seqlen, self.n_heads).transpose(1, 2)
+        b = self.sigma(b) # [b, h, s]
+        check(b, (bsz, self.n_heads, seqlen))
+
+        phi_q = phi(q)  # [b, h, s, d]
+        phi_k = phi(k)  # [b, h, s, d]
 
 
-        # Numerator: cumulative sum of phi(k) * v
-        kv = k_phi.unsqueeze(-1) * v.unsqueeze(-2)  # [b, h, s, d, d]
-        kv_cumsum = torch.cumsum(kv, dim=2)  # [b, h, s, d, d]
+        prev_W = torch.zeros(bsz, self.n_heads, self.head_dim, self.head_dim)
+        out = list()
 
-        # Denominator: cumulative sum of phi(k)
-        k_phi_cumsum = torch.cumsum(k_phi, dim=2)  # [b, h, s, d]
+        for i in range(seqlen):
+            v_i_bar = torch.einsum("bhdd, bhd -> bhd", prev_W, phi_k[:, :, i])  # [b, h, d]
+            check(v_i_bar, (bsz, self.n_heads, self.head_dim))
 
-        # Compute attention output
-        # out[b, h, i, d] = phi(q_i) @ (∑_{j ≤ i} phi(k_j) v_j^T) / (phi(q_i) @ ∑_{j ≤ i} phi(k_j))
-        # First do numerator
-        out_numerator = torch.einsum("bhid,bhidj->bhij", q_phi, kv_cumsum)  # [b, h, s, d]
-        out_denominator = torch.einsum("bhid,bhid->bhi", q_phi, k_phi_cumsum)  # [b, h, s]
+            # weighed average of v and v_bar
+            # v_new = bv + (1-b)v_bar = b(v-v_bar) + v_bar
+            beta_delta_v = torch.einsum("bh, bhd -> bhd", b[:, :, i], (v[:, :, i] - v_i_bar))
+            check(beta_delta_v, (bsz, self.n_heads, self.head_dim))
+            v_new_i = beta_delta_v + v_i_bar  # [b,h,d]
+            check(v_new_i, (bsz, self.n_heads, self.head_dim))
 
-        # Normalize: avoid divide-by-zero
-        out = out_numerator / (out_denominator.unsqueeze(-1) + 1e-6)  # [b, h, s, d]
+            # update W
+            update = torch.einsum("bhd, bhe -> bhde", beta_delta_v, phi_k[:, :, i])
+            # if torch.isnan(phi_k[:, :, i]).any():
+            #     print(phi_k[:, :, i].shape)
+            check(update, (bsz, self.n_heads, self.head_dim, self.head_dim))
+            curr_W = prev_W + update     # [b, h, d, d]
+            check(curr_W, (bsz, self.n_heads, self.head_dim, self.head_dim))
+
+            y_i = torch.einsum("bhdd, bhd -> bhd", curr_W, phi_q[:, :, i])  # [b, h, d]
+            check(y_i, (bsz, self.n_heads, self.head_dim))
+            out.append(y_i)
+
+            prev_W = curr_W
+
 
         # Merge heads and project
-        out = out.transpose(1, 2).reshape(bsz, seqlen, self.n_heads * self.head_dim)
+        # out is  [[b, h, d] * s]
+        out = torch.stack(out, dim=1)
+        check(out, (bsz, seqlen, self.n_heads, self.head_dim))
+        out = out.reshape(bsz, seqlen, self.n_heads * self.head_dim)
         y = self.linear_O(out)
         return y
 
@@ -163,7 +191,7 @@ class Block(nn.Module):
         self.use_flash = use_flash
         self.h_dim = h_dim
         self.ln1 = LayerNorm(h_dim, name=f"{self.name}.ln1")
-        self.attn = CausalSelfAttention(h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
+        self.attn = DeltaRule(h_dim=h_dim, head_dim=head_dim, n_heads=n_heads,
                                         name=f"{self.name}.CausalAttn",
                                         use_flash=self.use_flash,
                                         max_seq_len=max_seq_len)
@@ -175,13 +203,12 @@ class Block(nn.Module):
         # check(x, (bsz, seqlen, self.h_dim))
 
         ln_x = self.ln1(x, log=log)
-        attn_x = self.attn(query=ln_x, key=ln_x, value=ln_x, log=log)
+        attn_x = self.attn(query=ln_x, key=ln_x, value=ln_x, beta=ln_x, log=log)
         # log_stats_and_dist(attn_x, f"{self.name}.attn_delta", log)
         x = x + attn_x
 
         mlp_x = self.mlp(self.ln2(x, log=log), log=log)
-        # log_stats_and_dist(mlp_x, f"{self.name}.mlp_delta", log)
+
         x = x + mlp_x
 
-        # log_stats_and_dist(x, f"{self.name}.output", log)
         return x
