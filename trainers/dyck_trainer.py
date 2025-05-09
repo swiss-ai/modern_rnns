@@ -3,6 +3,7 @@ import torch
 from tqdm import tqdm
 
 from common_lib import parallel_utils
+from sklearn.metrics import precision_score, recall_score
 
 
 class DyckTrainer:
@@ -28,6 +29,7 @@ class DyckTrainer:
         self.eval_every = eval_every
         self.logger = logger
         self.criterion = torch.nn.CrossEntropyLoss()
+        self.criterion_no_reduction = torch.nn.CrossEntropyLoss(reduction='none')
 
     def train(self):
         self.model.train()
@@ -43,6 +45,10 @@ class DyckTrainer:
             logits, state = self.model(inputs, state)
             targets = torch.argmax(targets, dim=2)
             loss = self.criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
+            masked_loss = self.criterion_no_reduction(logits.view(-1, logits.size(-1)), targets.view(-1)).view_as(targets)
+            masked_loss = (targets.float() * masked_loss)
+
+            averaged_loss = masked_loss.mean()
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -58,10 +64,27 @@ class DyckTrainer:
 
             if step % 100 == 0:
                 accuracy = total_correct / total_samples
-                total_samples = total_correct = 0
-                print(f"[Step {step}] Train loss: {loss.item():.4f}")
+
+                # Flatten predictions and targets for precision/recall
+                flat_preds = preds.view(-1).cpu().numpy()
+                flat_targets = targets.view(-1).cpu().numpy()
+
+                precision = precision_score(flat_targets, flat_preds, average='macro', zero_division=0)
+                recall = recall_score(flat_targets, flat_preds, average='macro', zero_division=0)
+
+                print(f"[Step {step}] Train loss: {loss.item():.4f}, Masked loss: {averaged_loss.item():.4f}, Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}")
+
                 if self.logger:
-                    self.logger.log({"train/loss": loss.item()}, step)
+                    self.logger.log({
+                        "train/loss": loss.item(),
+                        "train/masked_loss": averaged_loss.item(),
+                        "train/accuracy": accuracy,
+                        "train/precision": precision,
+                        "train/recall": recall
+                    }, step)
+
+                total_correct = 0
+                total_samples = 0
 
             if step % self.eval_every == 0 and step > 0:
                 self.evaluate(step)
@@ -81,11 +104,14 @@ class DyckTrainer:
         if parallel_utils.is_main_process():
             self.save_checkpoint(self.logger, step)
 
+
     def evaluate(self, step):
         self.model.eval()
         total_loss = 0.0
         total_correct = 0
         total_samples = 0
+        all_preds = []
+        all_labels = []
         state = self._init_state()
 
         with torch.no_grad():
@@ -97,18 +123,34 @@ class DyckTrainer:
                 logits, state = self.model(inputs, state)
                 loss = self.criterion(logits.view(-1, logits.size(-1)), labels.view(-1))
                 total_loss += loss.item()
+                masked_loss = self.criterion_no_reduction(logits.view(-1, logits.size(-1)), labels.view(-1)).view_as(labels)
+                masked_loss = (labels.float() * masked_loss)
+
+                averaged_loss = masked_loss.mean()
 
                 preds = torch.argmax(logits, dim=2)
 
                 total_correct += (preds == labels).sum().item()
                 total_samples += targets.size(0) * targets.size(1)
 
+                all_preds.extend(preds.view(-1).cpu().numpy())
+                all_labels.extend(labels.view(-1).cpu().numpy())
+
         avg_loss = total_loss / 10
         accuracy = total_correct / total_samples
-        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+        precision = precision_score(all_labels, all_preds, average='macro', zero_division=0)
+        recall = recall_score(all_labels, all_preds, average='macro', zero_division=0)
+
+        print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f}, Masked loss: {averaged_loss.item():.4f}, Accuracy: {accuracy:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}")
 
         if self.logger:
-            self.logger.log({"eval/loss": avg_loss, "eval/accuracy": accuracy}, step)
+            self.logger.log({
+                "eval/loss": avg_loss,
+                "eval/masked_loss": averaged_loss.item(),
+                "eval/accuracy": accuracy,
+                "eval/precision": precision,
+                "eval/recall": recall
+            }, step)
 
         self.model.train()
 
