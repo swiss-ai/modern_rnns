@@ -29,18 +29,11 @@ class LayerNorm(nn.Module):
         self.bias = nn.Parameter(torch.zeros(h_dim))
 
     def forward(self, x, log=None):
-        if torch.isnan(x).any():
-            print("bad x")
-        x = torch.clamp(x, -1e4, 1e4)
 
         bsz, seqlen, _ = x.shape
         check(x, (bsz, seqlen, self.h_dim))
 
-        # log_stats_and_dist(x, f"{self.name}.preLN", log)
         y = F.layer_norm(x, self.weight.shape, self.weight, self.bias, 1e-5)
-        # log_stats_and_dist(x, f"{self.name}.postLN", log)
-        if torch.isnan(y).any():
-            print("bad ln")
         return y
 
 
@@ -105,12 +98,23 @@ class DeltaRule(nn.Module):
         phi_q = phi(q)  # [b, h, s, d]
         phi_k = phi(k)  # [b, h, s, d]
 
+        prev_W = torch.zeros(bsz, self.n_heads, self.head_dim, self.head_dim, device=query.device, dtype=query.dtype)
+        # z = torch.zeros(bsz, self.n_heads, self.head_dim, device=query.device, dtype=query.dtype)
 
-        prev_W = torch.zeros(bsz, self.n_heads, self.head_dim, self.head_dim)
         out = list()
 
         for i in range(seqlen):
-            v_i_bar = torch.einsum("bhdd, bhd -> bhd", prev_W, phi_k[:, :, i])  # [b, h, d]
+            # no nans, no good training
+            pq = phi_q[:, :, i] / (phi_q[:, :, i].sum(dim=-1, keepdim=True) + 1e-8)
+            pk = phi_k[:, :, i] / (phi_k[:, :, i].sum(dim=-1, keepdim=True) + 1e-8)
+
+
+
+            # norm_k = torch.einsum("bhd, bhd -> bh", z, pk)
+            # z = z + pk
+            # norm_q = torch.einsum("bhd, bhd -> bh", z, pq)
+
+            v_i_bar = torch.einsum("bhdd, bhd -> bhd", prev_W, pk) # /  (norm_k.unsqueeze(-1) + 1e-4) # [b, h, d]
             check(v_i_bar, (bsz, self.n_heads, self.head_dim))
 
             # weighed average of v and v_bar
@@ -121,14 +125,13 @@ class DeltaRule(nn.Module):
             check(v_new_i, (bsz, self.n_heads, self.head_dim))
 
             # update W
-            update = torch.einsum("bhd, bhe -> bhde", beta_delta_v, phi_k[:, :, i])
-            # if torch.isnan(phi_k[:, :, i]).any():
-            #     print(phi_k[:, :, i].shape)
+            update = torch.einsum("bhd, bhe -> bhde", beta_delta_v, pk)
+
             check(update, (bsz, self.n_heads, self.head_dim, self.head_dim))
             curr_W = prev_W + update     # [b, h, d, d]
             check(curr_W, (bsz, self.n_heads, self.head_dim, self.head_dim))
 
-            y_i = torch.einsum("bhdd, bhd -> bhd", curr_W, phi_q[:, :, i])  # [b, h, d]
+            y_i = torch.einsum("bhdd, bhd -> bhd", curr_W, pq)  #/ (norm_q.unsqueeze(-1) + 1e-4) # [b, h, d]
             check(y_i, (bsz, self.n_heads, self.head_dim))
             out.append(y_i)
 
