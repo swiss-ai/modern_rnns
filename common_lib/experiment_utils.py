@@ -82,7 +82,7 @@ def save_source_code(project_path, logger):
         with zipfile.ZipFile(path, mode="w") as zf:
             for file_path, file_name in python_files:
                 rel_path = os.path.relpath(file_path)
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, "rb") as f:
                     zf.writestr(rel_path, f.read())
         print(
             f"Successfully created a source code backup for {len(python_files)} python files."
