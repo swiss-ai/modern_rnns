@@ -47,6 +47,7 @@ class MQARDatasetIterator:
 
         self.pipe_token = n_keys + n_values
         self.query_token = self.pipe_token + 1
+        self.sep_token = self.query_token + 1
 
         if self.unique_keys:
             assert n_keys >= self.min_num_pairs, (
@@ -68,11 +69,11 @@ class MQARDatasetIterator:
             if element == self.pipe_token:
                 s = "="
             elif element == self.query_token:
-                s = "?, "
+                s = "?"
+            elif element == self.sep_token:
+                s = ", "
             else:
                 s = str(element.item())
-                if (i > 0 and tensor[i - 1] == self.pipe_token):
-                    s += ", "
             print(s, end="")
         print()
 
@@ -80,9 +81,10 @@ class MQARDatasetIterator:
         tensor = tensor.cpu().numpy() if tensor.is_cuda else tensor.numpy()
         preds = preds.cpu().numpy() if preds.is_cuda else preds.numpy()
         for i, element in enumerate(preds):
-            print(str(element.item()), end="")
-            if tensor[i] == self.query_token or (i > 0 and tensor[i - 1] == self.pipe_token):
+            if tensor[i] == self.sep_token:
                 print(", ", end="")
+            else:
+                print(str(element.item()), end="")
         print()
 
     def _parse_num_pairs(self, num_pairs):
@@ -123,8 +125,8 @@ class MQARDatasetIterator:
         )
 
         # must start with a key-value pair
-        sequence = np.array([keys[0], self.pipe_token, values[0]], dtype=np.int32)
-        targets = np.array([0, 0, 0], dtype=np.int32)
+        sequence = np.array([keys[0], self.pipe_token, values[0], self.sep_token], dtype=np.int32)
+        targets = np.array([0, 0, 0, 0], dtype=np.int32)
         ground_truth = {keys[0]: values[0]}
         num_keys_set = 1
         num_queries_set = 0
@@ -136,11 +138,11 @@ class MQARDatasetIterator:
                 sequence = np.concatenate(
                     (
                         sequence,
-                        [keys[num_keys_set], self.pipe_token, values[num_keys_set]],
+                        [keys[num_keys_set], self.pipe_token, values[num_keys_set], self.sep_token],
                     ),
                     axis=0,
                 )
-                targets = np.concatenate((targets, [0, 0, 0]), axis=0)
+                targets = np.concatenate((targets, [0, 0, 0, 0]), axis=0)
                 ground_truth[keys[num_keys_set]] = values[num_keys_set]
                 num_keys_set += 1
             else:
@@ -149,9 +151,9 @@ class MQARDatasetIterator:
                 )[0]
                 query_value = ground_truth[query_key]
                 sequence = np.concatenate(
-                    (sequence, [query_key, self.query_token]), axis=0
+                    (sequence, [query_key, self.query_token, self.sep_token]), axis=0
                 )
-                targets = np.concatenate((targets, [0, query_value]), axis=0)
+                targets = np.concatenate((targets, [0, query_value, 0]), axis=0)
                 num_queries_set += 1
 
         sequence_tensor = torch.tensor(sequence, dtype=torch.long).to(self.device)

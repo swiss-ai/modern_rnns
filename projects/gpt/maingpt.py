@@ -112,10 +112,10 @@ def run(config, logger):
             device=config.device,
         )
         config.num_input_classes = (
-            config.n_keys + config.n_values + 2
-        )  # pipe token, query token
+            config.n_keys + config.n_values + 3
+        )  # pipe token, query token, sep token
         config.output_size = config.n_keys + config.n_values
-        config.max_seq_len = max(config.max_num_pairs * 3 + config.num_queries * 2, config.max_seq_len)
+        config.max_seq_len = max(config.max_num_pairs * 4 + config.num_queries * 3, config.max_seq_len)
 
         trainerClass = MQARTrainer
     else:
