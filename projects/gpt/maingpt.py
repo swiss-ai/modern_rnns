@@ -40,7 +40,7 @@ import configs
 from common_lib import experiment_utils
 from common_lib.parallel_utils import mprint
 
-from datasets.mqar_dataset import MQARDatasetIterator
+from datasets.mqar_dataset2 import MQARDatasetIterator
 from modelgpt import ModelGPT
 from trainers.bit_parity_trainer import BitParityTrainer
 from trainers.dyck_trainer import DyckTrainer
@@ -90,10 +90,10 @@ def run(config, logger):
         train_ds = MQARDatasetIterator(
             batch_size=config.train_batch_size,
             num_pairs=config.train_num_pairs,
+            num_queries=config.num_queries,
             n_keys=config.n_keys,
             n_values=config.n_values,
             pad_num_pairs=config.max_num_pairs,
-            unique_keys=config.unique_keys,
             unique_keys=config.unique_keys,
             unique_values=config.unique_values,
             all_queries_for_input=config.all_queries_for_input,
@@ -102,6 +102,7 @@ def run(config, logger):
         eval_ds = MQARDatasetIterator(
             batch_size=config.eval_batch_size,
             num_pairs=config.eval_num_pairs,
+            num_queries=config.num_queries,
             n_keys=config.n_keys,
             n_values=config.n_values,
             pad_num_pairs=config.max_num_pairs,
@@ -110,11 +111,13 @@ def run(config, logger):
             all_queries_for_input=config.all_queries_for_input,
             device=config.device,
         )
-        config.num_input_classes = max(config.n_keys, config.n_values + 1) + 1
-        config.output_size = config.n_values + 1
-        config.max_seq_len = max(config.max_num_pairs * 3, config.max_seq_len)
+        config.num_input_classes = (
+            config.n_keys + config.n_values + 2
+        )  # pipe token, query token
+        config.output_size = config.n_keys + config.n_values
+        config.max_seq_len = max(config.max_num_pairs * 3 + config.num_queries * 2, config.max_seq_len)
 
-        trainerClass = MQARTrainer 
+        trainerClass = MQARTrainer
     else:
         # add the configuration for each new dataset here
         raise RuntimeError(

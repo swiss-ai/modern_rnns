@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm  # Optional for adding progress bars
 
+
 class MQARTrainer:
     def __init__(
         self,
@@ -34,33 +35,34 @@ class MQARTrainer:
         while step < self.max_steps:
             inputs, targets = next(self.train_loader)
 
-            inputs, targets = inputs.to(self.device), targets.to(self.device)
+            state = self._init_state()
             logits, state = self.model(inputs, state)
-            labels = torch.argmax(targets, dim = 1)
-            loss = self.criterion(logits[:, -1], labels)  
+            loss = self.criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
 
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
-            _, predicted = torch.max(logits[:, -1], dim=1)
-            _, true_values = torch.max(targets, dim=1)
-            correct = (predicted == true_values).sum().item()
-
             state = self._detach_state(state)
 
-            if step % 100 == 0:
-                accuracy = correct / targets.size(0)
-                print(f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}")
-                if self.logger:
-                    self.logger.log({"train/loss": loss.item(), "train/accuracy": accuracy}, step)
+            # if step % 100 == 0:
+            #     accuracy = correct / targets.size(0)
+            #     # print(inputs)
+            #     # print(labels)
+            #     # print(predicted)
+            #     # print(logits[:, -1])
+            #     print(
+            #         f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}"
+            #     )
+            #     if self.logger:
+            #         self.logger.log(
+            #             {"train/loss": loss.item(), "train/accuracy": accuracy}, step
+            #         )
 
             if step % self.eval_every == 0 and step > 0:
                 self.evaluate(step)
 
             step += 1
-            if step >= self.max_steps:
-                break
 
     def evaluate(self, step):
         self.model.eval()
@@ -72,21 +74,29 @@ class MQARTrainer:
         with torch.no_grad():
             for _ in range(10):
                 inputs, targets = next(self.eval_loader)
-                inputs, targets = inputs.to(self.device), targets.to(self.device)
                 state = self._init_state()
 
                 logits, state = self.model(inputs, state)
-                labels = torch.argmax(targets, dim = 1)
-                loss = self.criterion(logits[:, -1], labels)  
+                loss = self.criterion(
+                    logits.view(-1, logits.size(-1)), targets.view(-1)
+                )
                 total_loss += loss.item()
+                preds = torch.argmax(logits, dim=2)
 
-                _, predicted = torch.max(logits[:, -1], dim=1)
-                _, true_values = torch.max(targets, dim=1)
+                for i, seq in enumerate(inputs):
+                    print("I: ", end="")
+                    self.train_loader.pretty_print(seq)
+                    print("T: ", end="")
+                    self.train_loader.pretty_print_preds(seq, targets[i])
+                    print("P: ", end="")
+                    self.train_loader.pretty_print_preds(seq, preds[i])
+                    print()
+                    
+                mask = targets != 0
+                total_correct += (preds[mask] == targets[mask]).sum().item()
+                total_samples += mask.sum()
 
-                total_correct += (predicted == true_values).sum().item()
-                total_samples += inputs.size(0)
-
-        avg_loss = total_loss / 10 
+        avg_loss = total_loss / 10
         accuracy = total_correct / total_samples
         print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f} , Accuracy: {accuracy:.4f}")
 
@@ -97,9 +107,13 @@ class MQARTrainer:
 
     def _init_state(self):
         if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
-            return self.model.module.get_init_state(batch_size=self.train_loader.batch_size, device=self.device)
+            return self.model.module.get_init_state(
+                batch_size=self.train_loader.batch_size, device=self.device
+            )
         else:
-            return self.model.get_init_state(batch_size=self.train_loader.batch_size, device=self.device)
+            return self.model.get_init_state(
+                batch_size=self.train_loader.batch_size, device=self.device
+            )
 
     def _detach_state(self, state):
         if state is None:
