@@ -105,8 +105,8 @@ class DeltaRule(nn.Module):
 
         for i in range(seqlen):
             # no nans, no good training
-            pq = phi_q[:, :, i] / (phi_q[:, :, i].sum(dim=-1, keepdim=True) + 1e-8)
-            pk = phi_k[:, :, i] / (phi_k[:, :, i].sum(dim=-1, keepdim=True) + 1e-8)
+            pq = phi_q[:, :, i] #/ (phi_q[:, :, i].sum(dim=-1, keepdim=True) + 1e-8)
+            pk = phi_k[:, :, i] #/ (phi_k[:, :, i].sum(dim=-1, keepdim=True) + 1e-8)
 
 
 

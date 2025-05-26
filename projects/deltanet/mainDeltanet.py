@@ -44,7 +44,7 @@ from common_lib.parallel_utils import mprint
 
 
 import configs
-from modelDeltanet import Model
+from modelDeltanet import ModelDeltaNet
 
 from datasets.mqar_dataset import MQARDatasetIterator
 from trainers.bit_parity_trainer import BitParityTrainer
@@ -119,7 +119,7 @@ def run(config, logger):
 
     ## Setup Model
     torch.manual_seed(config.seed)
-    model = Model(config=config)
+    model = ModelDeltaNet(config=config)
     model = model.to(config.device)
 
     ## Setup Optimiser
