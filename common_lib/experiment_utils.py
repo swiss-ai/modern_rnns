@@ -73,6 +73,8 @@ def save_source_code(project_path, logger):
     languini_dir_path = os.path.join(project_path, "../..")
     python_files = []
     for dir_path, _, file_names in os.walk(languini_dir_path):
+        if "venv" in dir_path:
+            continue
         for file_name in file_names:
             if file_name.endswith(".py"):
                 python_files.append((os.path.join(dir_path, file_name), file_name))
