@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm  # Optional for adding progress bars
 
+
 class MQARTrainer:
     def __init__(
         self,
@@ -36,8 +37,8 @@ class MQARTrainer:
 
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             logits, state = self.model(inputs, state)
-            labels = torch.argmax(targets, dim = 1)
-            loss = self.criterion(logits[:, -1], labels)  
+            labels = torch.argmax(targets, dim=1)
+            loss = self.criterion(logits[:, -1], labels)
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -51,9 +52,13 @@ class MQARTrainer:
 
             if step % 100 == 0:
                 accuracy = correct / targets.size(0)
-                print(f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}")
+                print(
+                    f"[Step {step}] Train loss: {loss.item():.4f}, Accuracy: {accuracy:.4f}"
+                )
                 if self.logger:
-                    self.logger.log({"train/loss": loss.item(), "train/accuracy": accuracy}, step)
+                    self.logger.log(
+                        {"train/loss": loss.item(), "train/accuracy": accuracy}, step
+                    )
 
             if step % self.eval_every == 0 and step > 0:
                 self.evaluate(step)
@@ -76,8 +81,8 @@ class MQARTrainer:
                 state = self._init_state()
 
                 logits, state = self.model(inputs, state)
-                labels = torch.argmax(targets, dim = 1)
-                loss = self.criterion(logits[:, -1], labels)  
+                labels = torch.argmax(targets, dim=1)
+                loss = self.criterion(logits[:, -1], labels)
                 total_loss += loss.item()
 
                 _, predicted = torch.max(logits[:, -1], dim=1)
@@ -86,7 +91,7 @@ class MQARTrainer:
                 total_correct += (predicted == true_values).sum().item()
                 total_samples += inputs.size(0)
 
-        avg_loss = total_loss / 10 
+        avg_loss = total_loss / 10
         accuracy = total_correct / total_samples
         print(f"[Eval @ Step {step}] Loss: {avg_loss:.4f} , Accuracy: {accuracy:.4f}")
 
@@ -97,9 +102,13 @@ class MQARTrainer:
 
     def _init_state(self):
         if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
-            return self.model.module.get_init_state(batch_size=self.train_loader.batch_size, device=self.device)
+            return self.model.module.get_init_state(
+                batch_size=self.train_loader.batch_size, device=self.device
+            )
         else:
-            return self.model.get_init_state(batch_size=self.train_loader.batch_size, device=self.device)
+            return self.model.get_init_state(
+                batch_size=self.train_loader.batch_size, device=self.device
+            )
 
     def _detach_state(self, state):
         if state is None:

@@ -50,7 +50,7 @@ def setup_log_folder(log_path):
     # folder already exists, ask how to proceed.
     print("\nWARNING: The results directory already exists:\n{}".format(log_path))
     print("Delete previous results directory [y/n]? ", end="")
-    #choice = input()
+    # choice = input()
     choice = "y"
     while choice not in ["y", "Y", "n", "N"]:
         print("invalid answer. try again.", end="")

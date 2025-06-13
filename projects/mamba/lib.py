@@ -179,7 +179,7 @@ class Mamba(nn.Module):
                     u=x.permute(0, 2, 1), delta=dt, A=A, B=B_ssm, C=C_ssm, D=self.D.float(),
                     z=z.permute(0, 2, 1), # Pass z for silu gating
                     delta_bias=self.dt_proj.bias.float(), delta_softplus=True,
-                    return_last_state=True, initial_state=ssm_state,
+                    return_last_state=True,
                 )
                 new_ssm_state = last_ssm_state
 

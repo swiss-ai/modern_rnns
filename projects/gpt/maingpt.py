@@ -52,12 +52,8 @@ from trainers.mqar_trainer import MQARTrainer
 
 def run(config, logger):
 
-    _, train_max_seq_len = parse_sequence_length(
-        config.train_seq_len
-    )
-    _, test_max_seq_size = parse_sequence_length(
-        config.eval_seq_len
-    )
+    _, train_max_seq_len = parse_sequence_length(config.train_seq_len)
+    _, test_max_seq_size = parse_sequence_length(config.eval_seq_len)
     config.max_seq_len = max(train_max_seq_len, test_max_seq_size)
 
     if config.dataset == "bit_parity":
@@ -112,9 +108,13 @@ def run(config, logger):
         )
         config.num_input_classes = max(config.n_keys, config.n_values + 1) + 1
         config.output_size = config.n_values + 1
+        config.max_num_pairs = max(
+            int(config.train_num_pairs.split(",")[1]),
+            int(config.eval_num_pairs.split(",")[1]),
+        )
         config.max_seq_len = max(config.max_num_pairs * 3, config.max_seq_len)
 
-        trainerClass = MQARTrainer 
+        trainerClass = MQARTrainer
     else:
         # add the configuration for each new dataset here
         raise RuntimeError(
