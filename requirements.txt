@@ -1,0 +1,15 @@
+dotenv=0.9.9
+einops==0.8.1
+matplotlib==3.10.3
+munch==4.0.0
+numpy==2.3.0
+pandas==2.3.0
+scikit_learn==1.7.0
+submitit==1.5.3
+tensorboard==2.19.0
+torch==2.6.0
+tqdm==4.67.1
+wandb==0.20.1
+
+# Install mamba manually with the below line. Version 2.2.4 recommended
+# pip install mamba-ssm --no-build-isolation

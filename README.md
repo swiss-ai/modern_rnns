@@ -6,6 +6,15 @@ Codebase for the development of scalable RNNs like DeltaNet and similar.
 
 This codebase was initially developed for the [AI Center Projects in Machine Learning](https://ai.ethz.ch/education/courses/projects-ml-research.html) class at ETH. Our goal was to evaluate the associative memory capacity of sequence decoders with different internal mechanisms — replacing standard attention with linear and recurrent layers, inspired by RNNs.  We test how well these models generalize to longer sequences on structured tasks that require long-range recall.
 
+## Setup and Installation
+
+We recommend python3.12
+```
+pip install -r requirements.txt
+# Install mamba manually with the below line. Version 2.2.4 recommended
+pip install mamba-ssm --no-build-isolation
+```
+
 ## Models
 
 We implemented the following models:
@@ -84,7 +93,7 @@ python projects/lstm/mainlstm.py [config_name] --help
 # Dataset choices: ["bit_parity", "dyck", "mqar"]
 PYTHONPATH=. torchrun --standalone projects/lstm/mainlstm.py default --dataset bit_parity
 
-# Use different sequence lengths. The [64,128] is a min and max sequence length. 
+# Use different sequence lengths. The [64,128] is a min and max sequence length.
 PYTHONPATH=. torchrun --standalone projects/lstm/mainlstm.py default --dataset bit_parity --max_seq_len 128 --train_seq_len 16,16 --eval_seq_len 64,128
 ```
 
