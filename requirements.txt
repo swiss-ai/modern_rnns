@@ -1,4 +1,4 @@
-dotenv=0.9.9
+dotenv==0.9.9
 einops==0.8.1
 matplotlib==3.10.3
 munch==4.0.0
