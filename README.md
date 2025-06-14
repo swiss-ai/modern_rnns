@@ -90,4 +90,8 @@ PYTHONPATH=. torchrun --standalone projects/lstm/mainlstm.py default --dataset b
 
 ### Running All Models
 
-There is a notebook ```experiment.ipynb``` where you can choose which models and datasets to run, and then it will run them in bulk and upload all the results to Wandb.
+There is a notebook ```experiment.ipynb``` where you can choose which models and datasets to run. It will run them in bulk and upload all the results to Wandb.
+
+Set a few variables in the first cell first, such as your Wandb entity name, and which dataset you want to run.
+
+To reproduce our main results, you can run the notebook exactly as it is.
